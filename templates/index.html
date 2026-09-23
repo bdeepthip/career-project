@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>JobTrack | Job Application Tracker</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+</head>
+
+<body>
+
+    <nav class="navbar">
+
+        <h2>JobTrack</h2>
+
+        <div>
+            <a href="/login">Login</a>
+            <a href="/register">Register</a>
+        </div>
+
+    </nav>
+
+
+    <main class="hero">
+
+        <div class="hero-content">
+
+            <h1>
+                Track Your Job Search.
+                Stay Organized.
+            </h1>
+
+            <p>
+                Keep every application, interview, offer and opportunity
+                organized in one simple dashboard.
+            </p>
+
+            <div class="hero-buttons">
+
+                <a class="btn" href="/register">
+                    Get Started
+                </a>
+
+                <a class="btn btn-secondary" href="/login">
+                    Login
+                </a>
+
+            </div>
+
+        </div>
+
+    </main>
+
+</body>
+
+</html>

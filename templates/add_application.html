@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Add Application | JobTrack</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+<body>
+
+    <nav class="navbar">
+
+        <h2>JobTrack</h2>
+
+        <div>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/logout">Logout</a>
+        </div>
+
+    </nav>
+
+
+    <div class="form-container">
+
+        <h1>Add Application</h1>
+
+        <form method="POST">
+
+            <div class="form-group">
+
+                <label>Company</label>
+
+                <input
+                    type="text"
+                    name="company"
+                    placeholder="Example: Google"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Job Title</label>
+
+                <input
+                    type="text"
+                    name="job_title"
+                    placeholder="Example: Software Engineer"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Location</label>
+
+                <input
+                    type="text"
+                    name="location"
+                    placeholder="Example: New York, NY"
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Job URL</label>
+
+                <input
+                    type="url"
+                    name="job_url"
+                    placeholder="https://..."
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Date Applied</label>
+
+                <input
+                    type="date"
+                    name="date_applied"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Status</label>
+
+                <select name="status">
+
+                    <option value="Applied">Applied</option>
+                    <option value="Interview">Interview</option>
+                    <option value="Offer">Offer</option>
+                    <option value="Rejected">Rejected</option>
+
+                </select>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Notes</label>
+
+                <textarea
+                    name="notes"
+                    placeholder="Interview information, recruiter notes, follow-up details..."
+                ></textarea>
+
+            </div>
+
+
+            <button class="btn" type="submit">
+                Save Application
+            </button>
+
+            <a class="btn btn-secondary" href="/dashboard">
+                Cancel
+            </a>
+
+        </form>
+
+    </div>
+
+</body>
+
+</html>
