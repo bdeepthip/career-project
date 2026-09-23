@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Professional Profile | JobTrack</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+
+<body>
+
+
+<!-- =========================================
+     NAVIGATION BAR
+     ========================================= -->
+
+<nav class="navbar">
+
+    <h2>JobTrack</h2>
+
+    <div>
+
+        <a href="/dashboard">
+            Dashboard
+        </a>
+
+        <a href="/profile">
+            Profile
+        </a>
+
+        <a href="/applications/add">
+            Add Application
+        </a>
+
+        <a href="/logout">
+            Logout
+        </a>
+
+    </div>
+
+</nav>
+
+
+
+<!-- =========================================
+     PROFESSIONAL PROFILE
+     ========================================= -->
+
+<div class="form-container">
+
+    <h1>Professional Profile</h1>
+
+    <p style="margin-bottom: 25px; color: #6b7280;">
+        Tell JobTrack about your career goals so we can
+        personalize jobs and resume recommendations.
+    </p>
+
+
+    <form method="POST" action="/profile">
+
+
+        <!-- Professional Headline -->
+
+        <div class="form-group">
+
+            <label>
+                Professional Headline
+            </label>
+
+            <input
+                type="text"
+                name="headline"
+                placeholder="Example: Python Backend Developer"
+                value="{{ profile['headline'] if profile else '' }}"
+            >
+
+        </div>
+
+
+
+        <!-- Phone -->
+
+        <div class="form-group">
+
+            <label>
+                Phone
+            </label>
+
+            <input
+                type="text"
+                name="phone"
+                placeholder="Phone number"
+                value="{{ profile['phone'] if profile else '' }}"
+            >
+
+        </div>
+
+
+
+        <!-- Current Location -->
+
+        <div class="form-group">
+
+            <label>
+                Current Location
+            </label>
+
+            <input
+                type="text"
+                name="location"
+                placeholder="Example: Philadelphia, PA"
+                value="{{ profile['location'] if profile else '' }}"
+            >
+
+        </div>
+
+
+
+        <!-- Career Domain -->
+
+        <div class="form-group">
+
+            <label>
+                Career Domain
+            </label>
+
+            <select name="domain">
+
+                <option value="">
+                    Select Domain
+                </option>
+
+
+                <option
+                    value="Software Development"
+                    {% if profile and profile['domain'] == 'Software Development' %}
+                        selected
+                    {% endif %}
+                >
+                    Software Development
+                </option>
+
+
+                <option
+                    value="Data Science"
+                    {% if profile and profile['domain'] == 'Data Science' %}
+                        selected
+                    {% endif %}
+                >
+                    Data Science
+                </option>
+
+
+                <option
+                    value="Data Analytics"
+                    {% if profile and profile['domain'] == 'Data Analytics' %}
+                        selected
+                    {% endif %}
+                >
+                    Data Analytics
+                </option>
+
+
+                <option
+                    value="Cybersecurity"
+                    {% if profile and profile['domain'] == 'Cybersecurity' %}
+                        selected
+                    {% endif %}
+                >
+                    Cybersecurity
+                </option>
+
+
+                <option
+                    value="Cloud / DevOps"
+                    {% if profile and profile['domain'] == 'Cloud / DevOps' %}
+                        selected
+                    {% endif %}
+                >
+                    Cloud / DevOps
+                </option>
+
+
+                <option
+                    value="AI / Machine Learning"
+                    {% if profile and profile['domain'] == 'AI / Machine Learning' %}
+                        selected
+                    {% endif %}
+                >
+                    AI / Machine Learning
+                </option>
+
+            </select>
+
+        </div>
+
+
+
+        <!-- Target Role -->
+
+        <div class="form-group">
+
+            <label>
+                Target Job Role
+            </label>
+
+            <input
+                type="text"
+                name="target_role"
+                placeholder="Example: Backend Developer"
+                value="{{ profile['target_role'] if profile else '' }}"
+            >
+
+        </div>
+
+
+
+        <!-- Experience Level -->
+
+        <div class="form-group">
+
+            <label>
+                Experience Level
+            </label>
+
+            <select name="experience_level">
+
+                <option value="">
+                    Select Experience Level
+                </option>
+
+
+                <option
+                    value="Entry Level"
+                    {% if profile and profile['experience_level'] == 'Entry Level' %}
+                        selected
+                    {% endif %}
+                >
+                    Entry Level
+                </option>
+
+
+                <option
+                    value="1-2 Years"
+                    {% if profile and profile['experience_level'] == '1-2 Years' %}
+                        selected
+                    {% endif %}
+                >
+                    1-2 Years
+                </option>
+
+
+                <option
+                    value="3-5 Years"
+                    {% if profile and profile['experience_level'] == '3-5 Years' %}
+                        selected
+                    {% endif %}
+                >
+                    3-5 Years
+                </option>
+
+
+                <option
+                    value="5+ Years"
+                    {% if profile and profile['experience_level'] == '5+ Years' %}
+                        selected
+                    {% endif %}
+                >
+                    5+ Years
+                </option>
+
+            </select>
+
+        </div>
+
+
+
+        <!-- Preferred Location -->
+
+        <div class="form-group">
+
+            <label>
+                Preferred Job Location
+            </label>
+
+            <input
+                type="text"
+                name="preferred_location"
+                placeholder="Example: Remote / Philadelphia / New York"
+                value="{{ profile['preferred_location'] if profile else '' }}"
+            >
+
+        </div>
+
+
+
+        <!-- About -->
+
+        <div class="form-group">
+
+            <label>
+                About Me
+            </label>
+
+            <textarea
+                name="about"
+                placeholder="Write a short professional summary..."
+            >{{ profile['about'] if profile else '' }}</textarea>
+
+        </div>
+
+
+
+        <button
+            class="btn"
+            type="submit"
+        >
+            Save Profile
+        </button>
+
+
+        <a
+            class="btn btn-secondary"
+            href="/dashboard"
+        >
+            Cancel
+        </a>
+
+
+    </form>
+
+</div>
+
+
+
+
+<!-- =========================================
+     SKILLS
+     ========================================= -->
+
+<div class="form-container">
+
+    <h1>Skills</h1>
+
+    <p style="margin-bottom: 20px; color: #6b7280;">
+        Add your technical and professional skills.
+        JobTrack will use these skills later for job recommendations.
+    </p>
+
+
+    <!-- ADD SKILL FORM -->
+
+    <form
+        method="POST"
+        action="/skills/add"
+    >
+
+        <div class="form-group">
+
+            <label>
+                Add Skill
+            </label>
+
+            <input
+                type="text"
+                name="skill_name"
+                placeholder="Example: Python"
+                required
+            >
+
+        </div>
+
+
+        <button
+            class="btn"
+            type="submit"
+        >
+            + Add Skill
+        </button>
+
+    </form>
+
+
+
+    <!-- DISPLAY SKILLS -->
+
+    {% if skills %}
+
+        <div class="skills-list">
+
+            {% for skill in skills %}
+
+                <div class="skill-item">
+
+                    <span>
+                        {{ skill["skill_name"] }}
+                    </span>
+
+
+                    <form
+                        method="POST"
+                        action="/skills/delete/{{ skill['id'] }}"
+                    >
+
+                        <button
+                            type="submit"
+                            class="skill-delete"
+                            title="Delete skill"
+                        >
+                            ×
+                        </button>
+
+                    </form>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+
+    {% else %}
+
+        <p style="margin-top: 20px; color: #6b7280;">
+            No skills added yet.
+        </p>
+
+    {% endif %}
+
+</div>
+
+
+
+
+<!-- =========================================
+     EDUCATION
+     ========================================= -->
+
+<div class="form-container">
+
+    <h1>Education</h1>
+
+    <p style="margin-bottom: 20px; color: #6b7280;">
+        Add your educational background.
+    </p>
+
+
+    <!-- ADD EDUCATION FORM -->
+
+    <form
+        method="POST"
+        action="/education/add"
+    >
+
+
+        <div class="form-group">
+
+            <label>
+                Institution
+            </label>
+
+            <input
+                type="text"
+                name="institution"
+                placeholder="Example: Temple University"
+                required
+            >
+
+        </div>
+
+
+
+        <div class="form-group">
+
+            <label>
+                Degree
+            </label>
+
+            <input
+                type="text"
+                name="degree"
+                placeholder="Example: Master of Science"
+                required
+            >
+
+        </div>
+
+
+
+        <div class="form-group">
+
+            <label>
+                Field of Study
+            </label>
+
+            <input
+                type="text"
+                name="field_of_study"
+                placeholder="Example: Computer Science"
+            >
+
+        </div>
+
+
+
+        <div class="form-group">
+
+            <label>
+                Start Year
+            </label>
+
+            <input
+                type="number"
+                name="start_year"
+                placeholder="2024"
+                min="1950"
+                max="2100"
+            >
+
+        </div>
+
+
+
+        <div class="form-group">
+
+            <label>
+                End Year
+            </label>
+
+            <input
+                type="number"
+                name="end_year"
+                placeholder="2026"
+                min="1950"
+                max="2100"
+            >
+
+        </div>
+
+
+
+        <button
+            class="btn"
+            type="submit"
+        >
+            + Add Education
+        </button>
+
+
+    </form>
+
+
+
+    <!-- DISPLAY SAVED EDUCATION -->
+
+    {% if education %}
+
+        {% for item in education %}
+
+            <div class="profile-entry">
+
+
+                <div>
+
+                    <h3>
+                        {{ item["degree"] }}
+                    </h3>
+
+
+                    <p>
+                        <strong>
+                            {{ item["institution"] }}
+                        </strong>
+                    </p>
+
+
+                    {% if item["field_of_study"] %}
+
+                        <p>
+                            {{ item["field_of_study"] }}
+                        </p>
+
+                    {% endif %}
+
+
+                    {% if item["start_year"] or item["end_year"] %}
+
+                        <p>
+
+                            {% if item["start_year"] %}
+                                {{ item["start_year"] }}
+                            {% endif %}
+
+                            {% if item["start_year"] and item["end_year"] %}
+                                -
+                            {% endif %}
+
+                            {% if item["end_year"] %}
+                                {{ item["end_year"] }}
+                            {% endif %}
+
+                        </p>
+
+                    {% endif %}
+
+                </div>
+
+
+
+                <form
+                    method="POST"
+                    action="/education/delete/{{ item['id'] }}"
+                >
+
+                    <button
+                        class="btn btn-danger"
+                        type="submit"
+                    >
+                        Delete
+                    </button>
+
+                </form>
+
+
+            </div>
+
+        {% endfor %}
+
+
+    {% else %}
+
+        <p style="margin-top: 20px; color: #6b7280;">
+            No education added yet.
+        </p>
+
+    {% endif %}
+
+
+</div>
+
+
+
+
+<!-- =========================================
+     WORK EXPERIENCE
+     ========================================= -->
+
+<div class="form-container">
+
+    <h1>Work Experience</h1>
+
+    <p style="margin-bottom: 20px; color: #6b7280;">
+        Add internships and professional work experience.
+    </p>
+
+
+    <!-- ADD EXPERIENCE FORM -->
+
+    <form
+        method="POST"
+        action="/experience/add"
+    >
+
+
+        <div class="form-group">
+
+            <label>
+                Company
+            </label>
+
+            <input
+                type="text"
+                name="company"
+                placeholder="Example: Google"
+                required
+            >
+
+        </div>
+
+
+
+        <div class="form-group">
+
+            <label>
+                Job Title
+            </label>
+
+            <input
+                type="text"
+                name="job_title"
+                placeholder="Example: Software Engineer Intern"
+                required
+            >
+
+        </div>
+
+
+
+        <div class="form-group">
+
+            <label>
+                Location
+            </label>
+
+            <input
+                type="text"
+                name="location"
+                placeholder="Example: Philadelphia, PA"
+            >
+
+        </div>
+
+
+
+        <div class="form-group">
+
+            <label>
+                Start Date
+            </label>
+
+            <input
+                type="month"
+                name="start_date"
+            >
+
+        </div>
+
+
+
+        <div class="form-group">
+
+            <label>
+                End Date
+            </label>
+
+            <input
+                type="month"
+                name="end_date"
+            >
+
+        </div>
+
+
+
+        <div class="form-group">
+
+            <label>
+                Description
+            </label>
+
+            <textarea
+                name="description"
+                placeholder="Describe your responsibilities, technologies and achievements..."
+            ></textarea>
+
+        </div>
+
+
+
+        <button
+            class="btn"
+            type="submit"
+        >
+            + Add Experience
+        </button>
+
+
+    </form>
+
+
+
+    <!-- DISPLAY SAVED EXPERIENCE -->
+
+    {% if experience %}
+
+        {% for item in experience %}
+
+            <div class="profile-entry">
+
+
+                <div>
+
+                    <h3>
+                        {{ item["job_title"] }}
+                    </h3>
+
+
+                    <p>
+                        <strong>
+                            {{ item["company"] }}
+                        </strong>
+                    </p>
+
+
+                    {% if item["location"] %}
+
+                        <p>
+                            {{ item["location"] }}
+                        </p>
+
+                    {% endif %}
+
+
+                    {% if item["start_date"] or item["end_date"] %}
+
+                        <p>
+
+                            {% if item["start_date"] %}
+                                {{ item["start_date"] }}
+                            {% endif %}
+
+                            {% if item["start_date"] and item["end_date"] %}
+                                -
+                            {% endif %}
+
+                            {% if item["end_date"] %}
+                                {{ item["end_date"] }}
+                            {% else %}
+                                Present
+                            {% endif %}
+
+                        </p>
+
+                    {% endif %}
+
+
+                    {% if item["description"] %}
+
+                        <p>
+                            {{ item["description"] }}
+                        </p>
+
+                    {% endif %}
+
+
+                </div>
+
+
+
+                <form
+                    method="POST"
+                    action="/experience/delete/{{ item['id'] }}"
+                >
+
+                    <button
+                        class="btn btn-danger"
+                        type="submit"
+                    >
+                        Delete
+                    </button>
+
+                </form>
+
+
+            </div>
+
+        {% endfor %}
+
+
+    {% else %}
+
+        <p style="margin-top: 20px; color: #6b7280;">
+            No work experience added yet.
+        </p>
+
+    {% endif %}
+
+
+</div>
+
+
+</body>
+
+</html>
