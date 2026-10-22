@@ -192,7 +192,18 @@
 
                         </div>
 
-                        <span class="job-domain">
+                        <div>
+    <span class="job-domain">
+        {{ job["domain"] }}
+    </span>
+
+    <span class="match-badge
+        {% if job['match_score'] >= 70 %}high
+        {% elif job['match_score'] >= 40 %}medium
+        {% else %}low{% endif %}">
+        {{ job["match_score"] }}% match
+    </span>
+</div>
                             {{ job["domain"] }}
                         </span>
 

@@ -128,6 +128,22 @@ def init_db():
         )
     """)
 
+        # ==========================================
+    # 8. LEARNING RESOURCES TABLE
+    # ==========================================
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS learning_resources (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        skill_name TEXT NOT NULL UNIQUE,
+        resource_name TEXT NOT NULL,
+        provider TEXT,
+        url TEXT,
+        estimated_hours INTEGER,
+        cost TEXT
+        )
+    """)
+
     # Save database changes
     connection.commit()
 

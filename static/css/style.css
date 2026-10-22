@@ -610,3 +610,71 @@ textarea {
     }
 
 }
+/* =========================================
+   MATCH SCORE + SKILL GAP POPUP
+   ========================================= */
+
+.match-badge {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.match-badge.high, .match-score.high { background: #dcfce7; color: #166534; }
+.match-badge.medium, .match-score.medium { background: #fef9c3; color: #854d0e; }
+.match-badge.low, .match-score.low { background: #fee2e2; color: #991b1b; }
+
+.match-box {
+    margin: 10px 0 25px;
+    padding: 20px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+}
+
+.match-box p {
+    margin: 8px 0;
+}
+
+.match-score {
+    display: inline-block;
+    font-size: 32px;
+    font-weight: bold;
+    padding: 6px 16px;
+    border-radius: 10px;
+}
+
+.learning-dialog {
+    width: 90%;
+    max-width: 560px;
+    margin: auto;
+    padding: 28px;
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.learning-dialog::backdrop {
+    background: rgba(17, 24, 39, 0.5);
+}
+
+.learning-item {
+    padding: 14px 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.learning-item h3 {
+    margin-bottom: 6px;
+}
+
+.learning-item p {
+    margin: 4px 0;
+    color: #4b5563;
+}
+
+.learning-dialog form {
+    margin-top: 20px;
+}

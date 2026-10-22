@@ -1193,6 +1193,57 @@ def delete_experience(experience_id):
     return redirect(
         url_for("profile")
     )
+# ============================================================
+# MATCH SCORE HELPERS
+# ============================================================
+
+def parse_skills(skills_text):
+    """Turn 'Python, Flask, SQL' into {'python': 'Python', ...}.
+    Lowercase keys make matching case-insensitive;
+    values keep the original spelling for display."""
+
+    skills = {}
+
+    for skill in (skills_text or "").split(","):
+        skill = skill.strip()
+        if skill:
+            skills[skill.lower()] = skill
+
+    return skills
+
+
+def calculate_match(cursor, user_id, required_skills_text):
+    """Compare the user's profile skills to a job's required skills.
+    Returns (score, matched_skills, missing_skills)."""
+
+    cursor.execute(
+        "SELECT skill_name FROM skills WHERE user_id = ?",
+        (user_id,)
+    )
+
+    user_skills = {
+        row[0].strip().lower()
+        for row in cursor.fetchall()
+    }
+
+    required = parse_skills(required_skills_text)
+
+    if not required:
+        return 0, [], []
+
+    matched = [
+        original for lower, original in required.items()
+        if lower in user_skills
+    ]
+
+    missing = [
+        original for lower, original in required.items()
+        if lower not in user_skills
+    ]
+
+    score = round(len(matched) / len(required) * 100)
+
+    return score, matched, missing
 
 # ============================================================
 # JOB FEED
@@ -1263,7 +1314,21 @@ def jobs():
 
     cursor.execute(query, parameters)
 
-    jobs_data = cursor.fetchall()
+    jobs_rows = cursor.fetchall()
+
+    # Add a match score to each job
+    jobs_data = []
+
+    for job in jobs_rows:
+        score, _, _ = calculate_match(
+            cursor,
+            session["user_id"],
+            job["required_skills"]
+        )
+
+        job_dict = dict(job)
+        job_dict["match_score"] = score
+        jobs_data.append(job_dict)
 
     connection.close()
 
@@ -1290,24 +1355,64 @@ def job_details(job_id):
     cursor = connection.cursor()
 
     cursor.execute(
-        """
-        SELECT *
-        FROM jobs
-        WHERE id = ?
-        """,
+        "SELECT * FROM jobs WHERE id = ?",
         (job_id,)
     )
 
     job = cursor.fetchone()
 
+    if job is None:
+        connection.close()
+        return "Job not found", 404
+
+    match_score, matched, missing = calculate_match(
+        cursor,
+        session["user_id"],
+        job["required_skills"]
+    )
+
+    # Find learning resources for the missing skills
+    resources = {}
+
+    if missing:
+        placeholders = ",".join("?" * len(missing))
+
+        cursor.execute(
+            f"""
+            SELECT *
+            FROM learning_resources
+            WHERE LOWER(skill_name) IN ({placeholders})
+            """,
+            [skill.lower() for skill in missing]
+        )
+
+        for row in cursor.fetchall():
+            resources[row["skill_name"].lower()] = row
+
     connection.close()
 
-    if job is None:
-        return "Job not found", 404
+    learning_plan = [
+        {
+            "skill": skill,
+            "resource": resources.get(skill.lower())
+        }
+        for skill in missing
+    ]
+
+    total_hours = sum(
+        item["resource"]["estimated_hours"] or 0
+        for item in learning_plan
+        if item["resource"]
+    )
 
     return render_template(
         "job_details.html",
-        job=job
+        job=job,
+        match_score=match_score,
+        matched=matched,
+        missing=missing,
+        learning_plan=learning_plan,
+        total_hours=total_hours
     )
 
 # ============================================================
