@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Jobs | JobTrack</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+<body>
+
+
+<nav class="navbar">
+
+    <h2>JobTrack</h2>
+
+    <div>
+
+        <a href="/dashboard">
+            Dashboard
+        </a>
+
+        <a href="/jobs">
+            Jobs
+        </a>
+
+        <a href="/profile">
+            Profile
+        </a>
+
+        <a href="/applications/add">
+            Add Application
+        </a>
+
+        <a href="/logout">
+            Logout
+        </a>
+
+    </div>
+
+</nav>
+
+
+<div class="container">
+
+    <h1>Find Jobs</h1>
+
+    <p class="page-subtitle">
+        Search opportunities based on your career goals.
+    </p>
+
+
+    <!-- SEARCH AND FILTER -->
+
+    <form
+        method="GET"
+        action="/jobs"
+        class="job-search-form"
+    >
+
+        <input
+            type="text"
+            name="search"
+            placeholder="Job title, company or skill..."
+            value="{{ search }}"
+        >
+
+
+        <select name="domain">
+
+            <option value="">
+                All Domains
+            </option>
+
+            <option
+                value="Software Development"
+                {% if domain == "Software Development" %}
+                selected
+                {% endif %}
+            >
+                Software Development
+            </option>
+
+            <option
+                value="Data Analytics"
+                {% if domain == "Data Analytics" %}
+                selected
+                {% endif %}
+            >
+                Data Analytics
+            </option>
+
+            <option
+                value="Data Science"
+                {% if domain == "Data Science" %}
+                selected
+                {% endif %}
+            >
+                Data Science
+            </option>
+
+            <option
+                value="AI / Machine Learning"
+                {% if domain == "AI / Machine Learning" %}
+                selected
+                {% endif %}
+            >
+                AI / Machine Learning
+            </option>
+
+            <option
+                value="Cloud / DevOps"
+                {% if domain == "Cloud / DevOps" %}
+                selected
+                {% endif %}
+            >
+                Cloud / DevOps
+            </option>
+
+            <option
+                value="Cybersecurity"
+                {% if domain == "Cybersecurity" %}
+                selected
+                {% endif %}
+            >
+                Cybersecurity
+            </option>
+
+        </select>
+
+
+        <input
+            type="text"
+            name="location"
+            placeholder="Location..."
+            value="{{ location }}"
+        >
+
+
+        <button
+            class="btn"
+            type="submit"
+        >
+            Search
+        </button>
+
+
+        <a
+            href="/jobs"
+            class="btn btn-secondary"
+        >
+            Clear
+        </a>
+
+    </form>
+
+
+
+    <!-- JOB RESULTS -->
+
+    <div class="jobs-grid">
+
+        {% if jobs %}
+
+            {% for job in jobs %}
+
+                <div class="job-card">
+
+                    <div class="job-card-top">
+
+                        <div>
+
+                            <h2>
+                                {{ job["title"] }}
+                            </h2>
+
+                            <h3>
+                                {{ job["company"] }}
+                            </h3>
+
+                        </div>
+
+                        <span class="job-domain">
+                            {{ job["domain"] }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="job-meta">
+
+                        <span>
+                            📍 {{ job["location"] }}
+                        </span>
+
+                        <span>
+                            💼 {{ job["experience_level"] }}
+                        </span>
+
+                        <span>
+                            📅 {{ job["posted_date"] }}
+                        </span>
+
+                    </div>
+
+
+                    <p class="job-skills">
+
+                        <strong>
+                            Skills:
+                        </strong>
+
+                        {{ job["required_skills"] }}
+
+                    </p>
+
+
+                    <p class="job-description">
+
+                        {{ job["description"] }}
+
+                    </p>
+
+
+                    <a
+                        href="/jobs/{{ job['id'] }}"
+                        class="btn"
+                    >
+                        View Job
+                    </a>
+
+                </div>
+
+            {% endfor %}
+
+
+        {% else %}
+
+            <div class="empty-state">
+
+                <h2>
+                    No jobs found
+                </h2>
+
+                <p>
+                    Try changing your search or filters.
+                </p>
+
+                <a
+                    href="/jobs"
+                    class="btn"
+                >
+                    View All Jobs
+                </a>
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+</body>
+</html>

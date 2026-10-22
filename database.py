@@ -109,6 +109,24 @@ def init_db():
         )
     """)
 
+    # ==========================================
+    # 7. JOBS TABLE
+    # ==========================================
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS jobs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        company TEXT NOT NULL,
+        title TEXT NOT NULL,
+        domain TEXT,
+        location TEXT,
+        experience_level TEXT,
+        required_skills TEXT,
+        description TEXT,
+        job_url TEXT,
+        posted_date TEXT
+        )
+    """)
 
     # Save database changes
     connection.commit()

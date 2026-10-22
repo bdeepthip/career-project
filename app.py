@@ -1194,6 +1194,121 @@ def delete_experience(experience_id):
         url_for("profile")
     )
 
+# ============================================================
+# JOB FEED
+# ============================================================
+
+@app.route("/jobs")
+def jobs():
+
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    search = request.args.get("search", "").strip()
+    domain = request.args.get("domain", "").strip()
+    location = request.args.get("location", "").strip()
+
+    connection = sqlite3.connect("database.db")
+    connection.row_factory = sqlite3.Row
+    cursor = connection.cursor()
+
+    query = """
+        SELECT *
+        FROM jobs
+        WHERE 1 = 1
+    """
+
+    parameters = []
+
+    # Search job title or company
+    if search:
+
+        query += """
+            AND (
+                title LIKE ?
+                OR company LIKE ?
+                OR required_skills LIKE ?
+            )
+        """
+
+        search_value = f"%{search}%"
+
+        parameters.extend([
+            search_value,
+            search_value,
+            search_value
+        ])
+
+    # Filter by domain
+    if domain:
+
+        query += """
+            AND domain = ?
+        """
+
+        parameters.append(domain)
+
+    # Filter by location
+    if location:
+
+        query += """
+            AND location LIKE ?
+        """
+
+        parameters.append(f"%{location}%")
+
+    query += """
+        ORDER BY posted_date DESC
+    """
+
+    cursor.execute(query, parameters)
+
+    jobs_data = cursor.fetchall()
+
+    connection.close()
+
+    return render_template(
+        "jobs.html",
+        jobs=jobs_data,
+        search=search,
+        domain=domain,
+        location=location
+    )
+
+# ============================================================
+# JOB DETAILS
+# ============================================================
+
+@app.route("/jobs/<int:job_id>")
+def job_details(job_id):
+
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    connection = sqlite3.connect("database.db")
+    connection.row_factory = sqlite3.Row
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT *
+        FROM jobs
+        WHERE id = ?
+        """,
+        (job_id,)
+    )
+
+    job = cursor.fetchone()
+
+    connection.close()
+
+    if job is None:
+        return "Job not found", 404
+
+    return render_template(
+        "job_details.html",
+        job=job
+    )
 
 # ============================================================
 # START APPLICATION
