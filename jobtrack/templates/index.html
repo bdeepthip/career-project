@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Job Application Tracker{% endblock %}
+{% block main_class %}hero{% endblock %}
+
+{% block content %}
+
+<div class="hero-content">
+
+    <h1>Track your job search. Stay organized.</h1>
+
+    <p>
+        Keep every application, interview and offer in one dashboard,
+        see how well your skills match a job, and let job emails
+        update your statuses for you.
+    </p>
+
+    <div class="hero-buttons">
+        <a class="btn" href="{{ url_for('auth.register') }}">Get started</a>
+        <a class="btn btn-secondary" href="{{ url_for('auth.login') }}">Log in</a>
+    </div>
+
+</div>
+
+{% endblock %}

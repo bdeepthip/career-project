@@ -1,0 +1,52 @@
+"""
+App settings, read from environment variables (your .env file).
+
+Development (your laptop):  FLASK_ENV is unset or "development"
+Production (public server): set FLASK_ENV=production
+"""
+
+import os
+
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+class Config:
+    SECRET_KEY = os.environ.get("SECRET_KEY")
+
+    # Keeps using your existing database.db in the project folder
+    DATABASE = os.environ.get(
+        "DATABASE", os.path.join(PROJECT_ROOT, "database.db")
+    )
+
+    # Session cookie safety
+    SESSION_COOKIE_HTTPONLY = True      # JavaScript can't read the cookie
+    SESSION_COOKIE_SAMESITE = "Lax"     # other sites can't send it with forms
+    SESSION_COOKIE_SECURE = False       # True in production (HTTPS only)
+
+    # Reject huge form posts (a pasted email is a few KB at most)
+    MAX_CONTENT_LENGTH = 1 * 1024 * 1024  # 1 MB
+
+    WTF_CSRF_TIME_LIMIT = None  # CSRF token valid for the whole session
+
+    DEBUG = False
+    TESTING = False
+
+
+class DevelopmentConfig(Config):
+    DEBUG = True
+
+
+class ProductionConfig(Config):
+    SESSION_COOKIE_SECURE = True
+
+
+class TestConfig(Config):
+    TESTING = True
+    SECRET_KEY = "test-secret-key"
+    WTF_CSRF_ENABLED = False  # individual tests turn this back on
+
+
+def get_config():
+    if os.environ.get("FLASK_ENV") == "production":
+        return ProductionConfig
+    return DevelopmentConfig
