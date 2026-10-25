@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, session, redirect, url_for
 import sqlite3
 import os
+import re
 
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
@@ -157,22 +158,12 @@ def dashboard():
     if "user_id" not in session:
         return redirect(url_for("login"))
 
-    search = request.args.get(
-        "search",
-        ""
-    ).strip()
-
-    status_filter = request.args.get(
-        "status",
-        ""
-    ).strip()
+    search = request.args.get("search", "").strip()
+    status_filter = request.args.get("status", "").strip()
 
     connection = sqlite3.connect("database.db")
-
     connection.row_factory = sqlite3.Row
-
     cursor = connection.cursor()
-
 
     # --------------------------------------------------------
     # GET APPLICATIONS
@@ -185,7 +176,6 @@ def dashboard():
     """
 
     parameters = [session["user_id"]]
-
 
     # Search company/job title
     if search:
@@ -202,7 +192,6 @@ def dashboard():
         parameters.append(search_value)
         parameters.append(search_value)
 
-
     # Filter by status
     if status_filter:
 
@@ -212,19 +201,13 @@ def dashboard():
 
         parameters.append(status_filter)
 
-
     query += """
         ORDER BY id DESC
     """
 
-
-    cursor.execute(
-        query,
-        parameters
-    )
+    cursor.execute(query, parameters)
 
     applications = cursor.fetchall()
-
 
     # --------------------------------------------------------
     # DASHBOARD STATISTICS
@@ -241,7 +224,6 @@ def dashboard():
 
     total = cursor.fetchone()[0]
 
-
     cursor.execute(
         """
         SELECT COUNT(*)
@@ -253,7 +235,6 @@ def dashboard():
     )
 
     applied = cursor.fetchone()[0]
-
 
     cursor.execute(
         """
@@ -267,7 +248,6 @@ def dashboard():
 
     interviews = cursor.fetchone()[0]
 
-
     cursor.execute(
         """
         SELECT COUNT(*)
@@ -279,7 +259,6 @@ def dashboard():
     )
 
     offers = cursor.fetchone()[0]
-
 
     cursor.execute(
         """
@@ -293,9 +272,7 @@ def dashboard():
 
     rejected = cursor.fetchone()[0]
 
-
     connection.close()
-
 
     return render_template(
         "dashboard.html",
@@ -319,51 +296,24 @@ def dashboard():
 # ADD APPLICATION
 # ============================================================
 
-@app.route(
-    "/applications/add",
-    methods=["GET", "POST"]
-)
+@app.route("/applications/add", methods=["GET", "POST"])
 def add_application():
 
     if "user_id" not in session:
         return redirect(url_for("login"))
 
-
     if request.method == "POST":
 
         company = request.form["company"].strip()
+        job_title = request.form["job_title"].strip()
+        location = request.form["location"].strip()
+        job_url = request.form["job_url"].strip()
+        date_applied = request.form["date_applied"]
+        status = request.form["status"]
+        notes = request.form["notes"].strip()
 
-        job_title = request.form[
-            "job_title"
-        ].strip()
-
-        location = request.form[
-            "location"
-        ].strip()
-
-        job_url = request.form[
-            "job_url"
-        ].strip()
-
-        date_applied = request.form[
-            "date_applied"
-        ]
-
-        status = request.form[
-            "status"
-        ]
-
-        notes = request.form[
-            "notes"
-        ].strip()
-
-
-        connection = sqlite3.connect(
-            "database.db"
-        )
-
+        connection = sqlite3.connect("database.db")
         cursor = connection.cursor()
-
 
         cursor.execute(
             """
@@ -393,19 +343,12 @@ def add_application():
             )
         )
 
-
         connection.commit()
         connection.close()
 
+        return redirect(url_for("dashboard"))
 
-        return redirect(
-            url_for("dashboard")
-        )
-
-
-    return render_template(
-        "add_application.html"
-    )
+    return render_template("add_application.html")
 
 
 # ============================================================
@@ -421,34 +364,22 @@ def edit_application(application_id):
     if "user_id" not in session:
         return redirect(url_for("login"))
 
-
-    connection = sqlite3.connect(
-        "database.db"
-    )
-
+    connection = sqlite3.connect("database.db")
     connection.row_factory = sqlite3.Row
-
     cursor = connection.cursor()
-
 
     # Only get application owned by logged-in user
     cursor.execute(
         """
         SELECT *
         FROM job_applications
-
         WHERE id = ?
         AND user_id = ?
         """,
-        (
-            application_id,
-            session["user_id"]
-        )
+        (application_id, session["user_id"])
     )
 
-
     application = cursor.fetchone()
-
 
     if application is None:
 
@@ -456,37 +387,15 @@ def edit_application(application_id):
 
         return "Application not found", 404
 
-
     if request.method == "POST":
 
-        company = request.form[
-            "company"
-        ].strip()
-
-        job_title = request.form[
-            "job_title"
-        ].strip()
-
-        location = request.form[
-            "location"
-        ].strip()
-
-        job_url = request.form[
-            "job_url"
-        ].strip()
-
-        date_applied = request.form[
-            "date_applied"
-        ]
-
-        status = request.form[
-            "status"
-        ]
-
-        notes = request.form[
-            "notes"
-        ].strip()
-
+        company = request.form["company"].strip()
+        job_title = request.form["job_title"].strip()
+        location = request.form["location"].strip()
+        job_url = request.form["job_url"].strip()
+        date_applied = request.form["date_applied"]
+        status = request.form["status"]
+        notes = request.form["notes"].strip()
 
         cursor.execute(
             """
@@ -517,18 +426,12 @@ def edit_application(application_id):
             )
         )
 
-
         connection.commit()
         connection.close()
 
-
-        return redirect(
-            url_for("dashboard")
-        )
-
+        return redirect(url_for("dashboard"))
 
     connection.close()
-
 
     return render_template(
         "edit_application.html",
@@ -549,62 +452,39 @@ def delete_application(application_id):
     if "user_id" not in session:
         return redirect(url_for("login"))
 
-
-    connection = sqlite3.connect(
-        "database.db"
-    )
-
+    connection = sqlite3.connect("database.db")
     cursor = connection.cursor()
-
 
     cursor.execute(
         """
         DELETE FROM job_applications
-
         WHERE id = ?
         AND user_id = ?
         """,
-        (
-            application_id,
-            session["user_id"]
-        )
+        (application_id, session["user_id"])
     )
-
 
     connection.commit()
     connection.close()
 
-
-    return redirect(
-        url_for("dashboard")
-    )
+    return redirect(url_for("dashboard"))
 
 
 # ============================================================
 # PROFESSIONAL PROFILE
 # ============================================================
 
-@app.route(
-    "/profile",
-    methods=["GET", "POST"]
-)
+@app.route("/profile", methods=["GET", "POST"])
 def profile():
 
     if "user_id" not in session:
         return redirect(url_for("login"))
 
-
     user_id = session["user_id"]
 
-
-    connection = sqlite3.connect(
-        "database.db"
-    )
-
+    connection = sqlite3.connect("database.db")
     connection.row_factory = sqlite3.Row
-
     cursor = connection.cursor()
-
 
     # --------------------------------------------------------
     # SAVE / UPDATE PROFILE
@@ -612,38 +492,14 @@ def profile():
 
     if request.method == "POST":
 
-        headline = request.form[
-            "headline"
-        ].strip()
-
-        phone = request.form[
-            "phone"
-        ].strip()
-
-        location = request.form[
-            "location"
-        ].strip()
-
-        domain = request.form[
-            "domain"
-        ].strip()
-
-        target_role = request.form[
-            "target_role"
-        ].strip()
-
-        experience_level = request.form[
-            "experience_level"
-        ].strip()
-
-        preferred_location = request.form[
-            "preferred_location"
-        ].strip()
-
-        about = request.form[
-            "about"
-        ].strip()
-
+        headline = request.form["headline"].strip()
+        phone = request.form["phone"].strip()
+        location = request.form["location"].strip()
+        domain = request.form["domain"].strip()
+        target_role = request.form["target_role"].strip()
+        experience_level = request.form["experience_level"].strip()
+        preferred_location = request.form["preferred_location"].strip()
+        about = request.form["about"].strip()
 
         cursor.execute(
             """
@@ -654,9 +510,7 @@ def profile():
             (user_id,)
         )
 
-
         existing_profile = cursor.fetchone()
-
 
         # UPDATE existing profile
         if existing_profile:
@@ -688,7 +542,6 @@ def profile():
                     user_id
                 )
             )
-
 
         # CREATE new profile
         else:
@@ -723,15 +576,10 @@ def profile():
                 )
             )
 
-
         connection.commit()
         connection.close()
 
-
-        return redirect(
-            url_for("profile")
-        )
-
+        return redirect(url_for("profile"))
 
     # --------------------------------------------------------
     # GET PROFILE
@@ -748,7 +596,6 @@ def profile():
 
     profile_data = cursor.fetchone()
 
-
     # --------------------------------------------------------
     # GET SKILLS
     # --------------------------------------------------------
@@ -757,16 +604,13 @@ def profile():
         """
         SELECT *
         FROM skills
-
         WHERE user_id = ?
-
         ORDER BY skill_name
         """,
         (user_id,)
     )
 
     skills = cursor.fetchall()
-
 
     # --------------------------------------------------------
     # GET EDUCATION
@@ -776,16 +620,13 @@ def profile():
         """
         SELECT *
         FROM education
-
         WHERE user_id = ?
-
         ORDER BY end_year DESC
         """,
         (user_id,)
     )
 
     education = cursor.fetchall()
-
 
     # --------------------------------------------------------
     # GET EXPERIENCE
@@ -795,9 +636,7 @@ def profile():
         """
         SELECT *
         FROM experience
-
         WHERE user_id = ?
-
         ORDER BY start_date DESC
         """,
         (user_id,)
@@ -805,9 +644,7 @@ def profile():
 
     experience = cursor.fetchall()
 
-
     connection.close()
-
 
     return render_template(
         "profile.html",
@@ -828,166 +665,98 @@ def profile():
 # ADD SKILL
 # ============================================================
 
-@app.route(
-    "/skills/add",
-    methods=["POST"]
-)
+@app.route("/skills/add", methods=["POST"])
 def add_skill():
 
     if "user_id" not in session:
         return redirect(url_for("login"))
 
-
-    skill_name = request.form[
-        "skill_name"
-    ].strip()
-
+    skill_name = request.form["skill_name"].strip()
 
     if skill_name:
 
-        connection = sqlite3.connect(
-            "database.db"
-        )
-
+        connection = sqlite3.connect("database.db")
         cursor = connection.cursor()
-
 
         # Prevent duplicate skills
         cursor.execute(
             """
             SELECT id
             FROM skills
-
             WHERE user_id = ?
             AND LOWER(skill_name) = LOWER(?)
             """,
-            (
-                session["user_id"],
-                skill_name
-            )
+            (session["user_id"], skill_name)
         )
 
-
         existing_skill = cursor.fetchone()
-
 
         if not existing_skill:
 
             cursor.execute(
                 """
                 INSERT INTO skills
-                (
-                    user_id,
-                    skill_name
-                )
-
+                (user_id, skill_name)
                 VALUES (?, ?)
                 """,
-                (
-                    session["user_id"],
-                    skill_name
-                )
+                (session["user_id"], skill_name)
             )
-
 
             connection.commit()
 
-
         connection.close()
 
-
-    return redirect(
-        url_for("profile")
-    )
+    return redirect(url_for("profile"))
 
 
 # ============================================================
 # DELETE SKILL
 # ============================================================
 
-@app.route(
-    "/skills/delete/<int:skill_id>",
-    methods=["POST"]
-)
+@app.route("/skills/delete/<int:skill_id>", methods=["POST"])
 def delete_skill(skill_id):
 
     if "user_id" not in session:
         return redirect(url_for("login"))
 
-
-    connection = sqlite3.connect(
-        "database.db"
-    )
-
+    connection = sqlite3.connect("database.db")
     cursor = connection.cursor()
-
 
     cursor.execute(
         """
         DELETE FROM skills
-
         WHERE id = ?
         AND user_id = ?
         """,
-        (
-            skill_id,
-            session["user_id"]
-        )
+        (skill_id, session["user_id"])
     )
-
 
     connection.commit()
     connection.close()
 
-
-    return redirect(
-        url_for("profile")
-    )
+    return redirect(url_for("profile"))
 
 
 # ============================================================
 # ADD EDUCATION
 # ============================================================
 
-@app.route(
-    "/education/add",
-    methods=["POST"]
-)
+@app.route("/education/add", methods=["POST"])
 def add_education():
 
     if "user_id" not in session:
         return redirect(url_for("login"))
 
-
-    institution = request.form[
-        "institution"
-    ].strip()
-
-    degree = request.form[
-        "degree"
-    ].strip()
-
-    field_of_study = request.form[
-        "field_of_study"
-    ].strip()
-
-    start_year = request.form[
-        "start_year"
-    ].strip()
-
-    end_year = request.form[
-        "end_year"
-    ].strip()
-
+    institution = request.form["institution"].strip()
+    degree = request.form["degree"].strip()
+    field_of_study = request.form["field_of_study"].strip()
+    start_year = request.form["start_year"].strip()
+    end_year = request.form["end_year"].strip()
 
     if institution and degree:
 
-        connection = sqlite3.connect(
-            "database.db"
-        )
-
+        connection = sqlite3.connect("database.db")
         cursor = connection.cursor()
-
 
         cursor.execute(
             """
@@ -1013,107 +782,61 @@ def add_education():
             )
         )
 
-
         connection.commit()
         connection.close()
 
-
-    return redirect(
-        url_for("profile")
-    )
+    return redirect(url_for("profile"))
 
 
 # ============================================================
 # DELETE EDUCATION
 # ============================================================
 
-@app.route(
-    "/education/delete/<int:education_id>",
-    methods=["POST"]
-)
+@app.route("/education/delete/<int:education_id>", methods=["POST"])
 def delete_education(education_id):
 
     if "user_id" not in session:
         return redirect(url_for("login"))
 
-
-    connection = sqlite3.connect(
-        "database.db"
-    )
-
+    connection = sqlite3.connect("database.db")
     cursor = connection.cursor()
-
 
     cursor.execute(
         """
         DELETE FROM education
-
         WHERE id = ?
         AND user_id = ?
         """,
-        (
-            education_id,
-            session["user_id"]
-        )
+        (education_id, session["user_id"])
     )
-
 
     connection.commit()
     connection.close()
 
-
-    return redirect(
-        url_for("profile")
-    )
+    return redirect(url_for("profile"))
 
 
 # ============================================================
 # ADD EXPERIENCE
 # ============================================================
 
-@app.route(
-    "/experience/add",
-    methods=["POST"]
-)
+@app.route("/experience/add", methods=["POST"])
 def add_experience():
 
     if "user_id" not in session:
         return redirect(url_for("login"))
 
-
-    company = request.form[
-        "company"
-    ].strip()
-
-    job_title = request.form[
-        "job_title"
-    ].strip()
-
-    location = request.form[
-        "location"
-    ].strip()
-
-    start_date = request.form[
-        "start_date"
-    ].strip()
-
-    end_date = request.form[
-        "end_date"
-    ].strip()
-
-    description = request.form[
-        "description"
-    ].strip()
-
+    company = request.form["company"].strip()
+    job_title = request.form["job_title"].strip()
+    location = request.form["location"].strip()
+    start_date = request.form["start_date"].strip()
+    end_date = request.form["end_date"].strip()
+    description = request.form["description"].strip()
 
     if company and job_title:
 
-        connection = sqlite3.connect(
-            "database.db"
-        )
-
+        connection = sqlite3.connect("database.db")
         cursor = connection.cursor()
-
 
         cursor.execute(
             """
@@ -1141,61 +864,57 @@ def add_experience():
             )
         )
 
-
         connection.commit()
         connection.close()
 
-
-    return redirect(
-        url_for("profile")
-    )
+    return redirect(url_for("profile"))
 
 
 # ============================================================
 # DELETE EXPERIENCE
 # ============================================================
 
-@app.route(
-    "/experience/delete/<int:experience_id>",
-    methods=["POST"]
-)
+@app.route("/experience/delete/<int:experience_id>", methods=["POST"])
 def delete_experience(experience_id):
 
     if "user_id" not in session:
         return redirect(url_for("login"))
 
-
-    connection = sqlite3.connect(
-        "database.db"
-    )
-
+    connection = sqlite3.connect("database.db")
     cursor = connection.cursor()
-
 
     cursor.execute(
         """
         DELETE FROM experience
-
         WHERE id = ?
         AND user_id = ?
         """,
-        (
-            experience_id,
-            session["user_id"]
-        )
+        (experience_id, session["user_id"])
     )
-
 
     connection.commit()
     connection.close()
 
+    return redirect(url_for("profile"))
 
-    return redirect(
-        url_for("profile")
-    )
+
 # ============================================================
 # MATCH SCORE HELPERS
 # ============================================================
+
+# Skills the Match Checker looks for in a pasted job description.
+# Single-letter or common-word skills (like "R" or "Go") are left out
+# because they create false matches in normal English text.
+KNOWN_SKILLS = [
+    "Python", "SQL", "Java", "JavaScript", "TypeScript", "C++", "C#",
+    "Scala", "HTML", "CSS", "React", "Node.js", "Flask", "Django",
+    "FastAPI", "REST API", "Git", "Docker", "Kubernetes", "AWS", "Azure",
+    "GCP", "Linux", "Pandas", "NumPy", "Scikit-learn", "Machine Learning",
+    "Spark", "PySpark", "Airflow", "Kafka", "Snowflake", "Databricks",
+    "ETL", "Data Modeling", "Data Warehousing", "Tableau", "Power BI",
+    "Excel", "MongoDB", "PostgreSQL", "MySQL", "Jenkins", "CI/CD",
+]
+
 
 def parse_skills(skills_text):
     """Turn 'Python, Flask, SQL' into {'python': 'Python', ...}.
@@ -1245,6 +964,64 @@ def calculate_match(cursor, user_id, required_skills_text):
 
     return score, matched, missing
 
+
+def extract_skills(text):
+    """Find which KNOWN_SKILLS appear in a block of text.
+    Returns them as a comma-separated string, the same format
+    as the jobs table, so calculate_match can reuse it."""
+
+    text_lower = (text or "").lower()
+    found = []
+
+    for skill in KNOWN_SKILLS:
+        # Match whole words only, so "Java" doesn't match "JavaScript"
+        pattern = (
+            r"(?<![a-z0-9+#])"
+            + re.escape(skill.lower())
+            + r"(?![a-z0-9+#])"
+        )
+
+        if re.search(pattern, text_lower):
+            found.append(skill)
+
+    return ", ".join(found)
+
+
+def build_learning_plan(cursor, missing):
+    """Look up a course for each missing skill.
+    Returns (learning_plan, total_hours)."""
+
+    resources = {}
+
+    if missing:
+        placeholders = ",".join("?" * len(missing))
+
+        cursor.execute(
+            f"""
+            SELECT *
+            FROM learning_resources
+            WHERE LOWER(skill_name) IN ({placeholders})
+            """,
+            [skill.lower() for skill in missing]
+        )
+
+        for row in cursor.fetchall():
+            resources[row["skill_name"].lower()] = row
+
+    learning_plan = [
+        {"skill": skill, "resource": resources.get(skill.lower())}
+        for skill in missing
+    ]
+
+    total_hours = sum(
+        item["resource"]["estimated_hours"] or 0
+        for item in learning_plan
+        if item["resource"]
+    )
+
+    return learning_plan, total_hours
+
+
 # ============================================================
 # JOB FEED
 # ============================================================
@@ -1271,7 +1048,7 @@ def jobs():
 
     parameters = []
 
-    # Search job title or company
+    # Search job title, company or skill
     if search:
 
         query += """
@@ -1284,11 +1061,7 @@ def jobs():
 
         search_value = f"%{search}%"
 
-        parameters.extend([
-            search_value,
-            search_value,
-            search_value
-        ])
+        parameters.extend([search_value, search_value, search_value])
 
     # Filter by domain
     if domain:
@@ -1340,6 +1113,7 @@ def jobs():
         location=location
     )
 
+
 # ============================================================
 # JOB DETAILS
 # ============================================================
@@ -1371,39 +1145,9 @@ def job_details(job_id):
         job["required_skills"]
     )
 
-    # Find learning resources for the missing skills
-    resources = {}
-
-    if missing:
-        placeholders = ",".join("?" * len(missing))
-
-        cursor.execute(
-            f"""
-            SELECT *
-            FROM learning_resources
-            WHERE LOWER(skill_name) IN ({placeholders})
-            """,
-            [skill.lower() for skill in missing]
-        )
-
-        for row in cursor.fetchall():
-            resources[row["skill_name"].lower()] = row
+    learning_plan, total_hours = build_learning_plan(cursor, missing)
 
     connection.close()
-
-    learning_plan = [
-        {
-            "skill": skill,
-            "resource": resources.get(skill.lower())
-        }
-        for skill in missing
-    ]
-
-    total_hours = sum(
-        item["resource"]["estimated_hours"] or 0
-        for item in learning_plan
-        if item["resource"]
-    )
 
     return render_template(
         "job_details.html",
@@ -1414,6 +1158,56 @@ def job_details(job_id):
         learning_plan=learning_plan,
         total_hours=total_hours
     )
+
+
+# ============================================================
+# MATCH CHECKER (paste any job description)
+# ============================================================
+
+@app.route("/match", methods=["GET", "POST"])
+def match_checker():
+
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    job_description = ""
+    result = None
+
+    if request.method == "POST":
+
+        job_description = request.form["job_description"].strip()
+
+        connection = sqlite3.connect("database.db")
+        connection.row_factory = sqlite3.Row
+        cursor = connection.cursor()
+
+        required_skills = extract_skills(job_description)
+
+        match_score, matched, missing = calculate_match(
+            cursor,
+            session["user_id"],
+            required_skills
+        )
+
+        learning_plan, total_hours = build_learning_plan(cursor, missing)
+
+        connection.close()
+
+        result = {
+            "match_score": match_score,
+            "matched": matched,
+            "missing": missing,
+            "learning_plan": learning_plan,
+            "total_hours": total_hours,
+            "found_any": bool(required_skills),
+        }
+
+    return render_template(
+        "match.html",
+        job_description=job_description,
+        result=result
+    )
+
 
 # ============================================================
 # START APPLICATION

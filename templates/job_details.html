@@ -164,60 +164,8 @@
 
 <!-- SKILL GAP POPUP -->
 
-{% if missing %}
-<dialog id="learning-dialog" class="learning-dialog">
+{% include "_learning_dialog.html" %}
 
-    <h2>Your Learning Plan</h2>
-
-    <p class="page-subtitle">
-        About {{ total_hours }} hours to close your skill gap
-        (estimated, for skills with a listed course).
-    </p>
-
-    {% for item in learning_plan %}
-
-        <div class="learning-item">
-
-            <h3>{{ item.skill }}</h3>
-
-            {% if item.resource %}
-
-                <p>
-                    <a href="{{ item.resource['url'] }}"
-                       target="_blank"
-                       rel="noopener noreferrer">
-                        {{ item.resource["resource_name"] }}
-                    </a>
-                    by {{ item.resource["provider"] }}
-                </p>
-
-                <p>
-                    ⏱ ~{{ item.resource["estimated_hours"] }} hours
-                    · 💲 {{ item.resource["cost"] }}
-                </p>
-
-            {% else %}
-
-                <p>
-                    No course listed yet.
-                    <a href="https://www.youtube.com/results?search_query={{ (item.skill ~ ' tutorial') | urlencode }}"
-                       target="_blank"
-                       rel="noopener noreferrer">
-                        Search tutorials
-                    </a>
-                </p>
-
-            {% endif %}
-
-        </div>
-
-    {% endfor %}
-
-    <form method="dialog">
-        <button class="btn btn-secondary">Close</button>
-    </form>
-
-</dialog>
 {% endif %}
 
 

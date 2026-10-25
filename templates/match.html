@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Match Checker | JobTrack</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+</head>
+
+<body>
+
+<nav class="navbar">
+
+    <h2>JobTrack</h2>
+
+    <div>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/jobs">Jobs</a>
+        <a href="/match">Match Checker</a>
+        <a href="/profile">Profile</a>
+        <a href="/logout">Logout</a>
+    </div>
+
+</nav>
+
+
+<div class="container">
+
+    <h1>Match Checker</h1>
+
+    <p class="page-subtitle">
+        Paste any job description to see how your profile skills match.
+    </p>
+
+
+    <form method="POST" class="match-form">
+
+        <textarea
+            name="job_description"
+            placeholder="Paste the full job description here..."
+            required
+            style="min-height: 220px;"
+        >{{ job_description }}</textarea>
+
+        <button class="btn" type="submit" style="margin-top: 12px;">
+            Check Match
+        </button>
+
+    </form>
+
+
+    {% if result %}
+
+        {% if not result.found_any %}
+
+            <div class="match-box">
+                <p>
+                    No known skills were found in this description.
+                    Try pasting the full posting, including the
+                    requirements section.
+                </p>
+            </div>
+
+        {% else %}
+
+            {% set match_score = result.match_score %}
+            {% set matched = result.matched %}
+            {% set missing = result.missing %}
+            {% set learning_plan = result.learning_plan %}
+            {% set total_hours = result.total_hours %}
+
+            <div class="match-box">
+
+                <h3>Your Match Score</h3>
+
+                <p class="match-score
+                    {% if match_score >= 70 %}high
+                    {% elif match_score >= 40 %}medium
+                    {% else %}low{% endif %}">
+                    {{ match_score }}%
+                </p>
+
+                {% if matched %}
+                    <p><strong>You have:</strong> {{ matched | join(", ") }}</p>
+                {% endif %}
+
+                {% if missing %}
+                    <p><strong>Missing:</strong> {{ missing | join(", ") }}</p>
+
+                    <button
+                        class="btn"
+                        type="button"
+                        onclick="document.getElementById('learning-dialog').showModal()"
+                    >
+                        See how to learn missing skills
+                    </button>
+                {% endif %}
+
+            </div>
+
+            {% include "_learning_dialog.html" %}
+
+        {% endif %}
+
+    {% endif %}
+
+</div>
+
+</body>
+</html>
