@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h1>Welcome, {{ g.user["name"] }}</h1>
+        <p class="page-subtitle">Track and manage your job search from one place.</p>
+    </div>
+    <a class="btn" href="{{ url_for('applications.add_application') }}">+ Add application</a>
+</div>
+
+
+<!-- STATISTICS (each card filters the table) -->
+
+<div class="stats">
+    <a class="card stat-card {{ 'selected' if not status_filter }}"
+       href="{{ url_for('applications.dashboard', search=search or None) }}">
+        <h3>Total applications</h3>
+        <p>{{ total }}</p>
+    </a>
+    {% for status in statuses %}
+        <a class="card stat-card {{ 'selected' if status_filter == status }}"
+           href="{{ url_for('applications.dashboard', status=status, search=search or None) }}">
+            <h3>{{ "Interviews" if status == "Interview" else ("Offers" if status == "Offer" else status) }}</h3>
+            <p>{{ counts[status] }}</p>
+        </a>
+    {% endfor %}
+</div>
+
+
+<!-- SEARCH -->
+
+<div class="search-box">
+    <form method="GET" action="{{ url_for('applications.dashboard') }}">
+        <label class="sr-only" for="search">Search</label>
+        <input type="text" id="search" name="search" placeholder="Search company or job title..."
+               value="{{ search }}">
+
+        <label class="sr-only" for="status">Status</label>
+        <select id="status" name="status">
+            <option value="">All statuses</option>
+            {% for status in statuses %}
+                <option value="{{ status }}" {{ 'selected' if status_filter == status }}>{{ status }}</option>
+            {% endfor %}
+        </select>
+
+        <button class="btn" type="submit">Search</button>
+        <a class="btn btn-secondary" href="{{ url_for('applications.dashboard') }}">Clear</a>
+    </form>
+</div>
+
+
+<!-- APPLICATIONS -->
+
+{% if applications %}
+
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>Company</th>
+                <th>Job title</th>
+                <th>Location</th>
+                <th>Date applied</th>
+                <th>Status</th>
+                <th>Job</th>
+                <th>Notes</th>
+                <th><span class="sr-only">Actions</span></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for application in applications %}
+            <tr>
+                <td><strong>{{ application["company"] }}</strong></td>
+                <td>{{ application["job_title"] }}</td>
+                <td>{{ application["location"] or "–" }}</td>
+                <td class="nowrap">{{ application["date_applied"] }}</td>
+                <td>
+                    <span class="status status-{{ application['status'] | lower }}">
+                        {{ application["status"] }}
+                    </span>
+                </td>
+                <td>
+                    {% if application["job_url"] %}
+                        <a href="{{ application['job_url'] }}" target="_blank" rel="noopener noreferrer">View job</a>
+                    {% else %}–{% endif %}
+                </td>
+                <td class="notes-cell">{{ application["notes"] or "–" }}</td>
+                <td>
+                    <div class="actions">
+                        <a class="btn btn-small"
+                           href="{{ url_for('applications.edit_application', application_id=application['id']) }}">Edit</a>
+
+                        <form method="POST"
+                              action="{{ url_for('applications.delete_application', application_id=application['id']) }}"
+                              data-confirm="Delete {{ application['company'] }}? This cannot be undone.">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button class="btn btn-small btn-danger" type="submit">Delete</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% elif total == 0 %}
+
+<div class="empty-state">
+    <h2>No applications yet</h2>
+    <p>Add the jobs you've applied to and track them from Applied to Offer.</p>
+    <a class="btn" href="{{ url_for('applications.add_application') }}">Add your first application</a>
+</div>
+
+{% else %}
+
+<div class="empty-state">
+    <h2>No matches</h2>
+    <p>No applications match this search or filter.</p>
+    <a class="btn btn-secondary" href="{{ url_for('applications.dashboard') }}">Show all</a>
+</div>
+
+{% endif %}
+
+{% endblock %}

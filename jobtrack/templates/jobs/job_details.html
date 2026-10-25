@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}{{ job["title"] }}{% endblock %}
+
+{% block content %}
+
+<a href="{{ url_for('jobs.jobs') }}" class="back-link">← Back to jobs</a>
+
+<article class="job-details-card">
+
+    <span class="job-domain">{{ job["domain"] }}</span>
+
+    <h1>{{ job["title"] }}</h1>
+    <h2>{{ job["company"] }}</h2>
+
+    <div class="job-meta">
+        <span>{{ job["location"] }}</span>
+        <span>{{ job["experience_level"] }}</span>
+        <span>Posted {{ job["posted_date"] }}</span>
+    </div>
+
+    <hr>
+
+    <h3>Job description</h3>
+    <p class="job-full-description">{{ job["description"] }}</p>
+
+    <h3>Required skills</h3>
+    <div class="required-skills">
+        {% for skill in (job["required_skills"] or "").split(",") if skill.strip() %}
+            <span class="skill-badge">{{ skill.strip() }}</span>
+        {% endfor %}
+    </div>
+
+    {% include "jobs/_match_box.html" %}
+
+    <div class="job-actions">
+        {% if job["job_url"] %}
+            <a href="{{ job['job_url'] }}" target="_blank" rel="noopener noreferrer" class="btn">Apply now</a>
+        {% endif %}
+        <a href="{{ url_for('applications.add_application',
+                            company=job['company'], job_title=job['title'],
+                            location=job['location'], job_url=job['job_url']) }}"
+           class="btn btn-secondary">Track application</a>
+    </div>
+
+</article>
+
+{% endblock %}

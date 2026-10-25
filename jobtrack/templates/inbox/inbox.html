@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Inbox{% endblock %}
+
+{% block content %}
+
+<h1>Inbox</h1>
+<p class="page-subtitle">
+    Paste a job email and JobTrack finds the company, reads whether it's a
+    confirmation, interview, offer or rejection, and updates that application.
+</p>
+
+
+{% if gmail_enabled %}
+<section class="panel">
+    <h2>Sync from Gmail</h2>
+    <p class="muted">Pulls new emails from your Gmail <strong>JobTrack</strong> label.</p>
+    <form method="POST" action="{{ url_for('inbox.inbox_sync') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn" type="submit">Sync now</button>
+    </form>
+</section>
+{% endif %}
+
+
+<section class="panel">
+
+    <h2>Paste an email</h2>
+
+    <form method="POST" action="{{ url_for('inbox.inbox_add') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-group">
+            <label for="sender">From</label>
+            <input type="text" id="sender" name="sender" maxlength="300"
+                   placeholder="Example: Amazon Recruiting <no-reply@amazon.com>">
+        </div>
+
+        <div class="form-group">
+            <label for="subject">Subject</label>
+            <input type="text" id="subject" name="subject" maxlength="500"
+                   placeholder="Example: Your application to Amazon">
+        </div>
+
+        <div class="form-group">
+            <label for="body">Email text</label>
+            <textarea id="body" name="body" placeholder="Paste the email body here..."></textarea>
+        </div>
+
+        <button class="btn" type="submit">Process email</button>
+    </form>
+
+</section>
+
+
+<h2 class="section-title">Processed emails</h2>
+
+{% for item in emails %}
+
+    <article class="email-card">
+
+        <div class="email-top">
+            <div>
+                <h3>{{ item["subject"] or "(no subject)" }}</h3>
+                <p class="email-meta">{{ item["sender"] or "Unknown sender" }} · {{ item["received_at"] }}</p>
+            </div>
+            <span class="status status-{{ (item['detected_status'] or 'unclear') | lower }}">
+                {{ item["detected_status"] or "Unclear" }}
+            </span>
+        </div>
+
+        <p class="email-note">
+            {% if item["app_company"] %}
+                Matched to <strong>{{ item["app_company"] }}</strong> ({{ item["app_title"] }}).
+            {% endif %}
+            {{ item["update_note"] }}
+        </p>
+
+        <div class="email-actions">
+
+            {% if applications %}
+                <form method="POST" action="{{ url_for('inbox.inbox_assign', email_id=item['id']) }}"
+                      class="assign-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <label class="sr-only" for="assign-{{ item['id'] }}">Link to application</label>
+                    <select id="assign-{{ item['id'] }}" name="application_id" required>
+                        <option value="">{{ "Change match..." if item["application_id"] else "Choose application..." }}</option>
+                        {% for app in applications %}
+                            <option value="{{ app['id'] }}">{{ app["company"] }} – {{ app["job_title"] }} ({{ app["status"] }})</option>
+                        {% endfor %}
+                    </select>
+                    <button class="btn btn-small btn-secondary" type="submit">Link</button>
+                </form>
+            {% endif %}
+
+            <form method="POST" action="{{ url_for('inbox.inbox_delete', email_id=item['id']) }}"
+                  data-confirm="Delete this email from JobTrack? Your application stays as it is.">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-small btn-danger" type="submit">Delete</button>
+            </form>
+
+        </div>
+
+    </article>
+
+{% else %}
+
+    <div class="empty-state">
+        <p>No emails yet. Paste one above to try it.</p>
+    </div>
+
+{% endfor %}
+
+{% endblock %}
