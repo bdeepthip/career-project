@@ -6,7 +6,6 @@ database helper, turns on CSRF protection, and registers each
 section of the site (a "blueprint" is one section with its routes).
 """
 
-from dotenv import load_dotenv
 from flask import Flask, render_template
 from flask_wtf.csrf import CSRFError, CSRFProtect
 
@@ -17,8 +16,6 @@ csrf = CSRFProtect()
 
 
 def create_app(config_class=None):
-    load_dotenv()
-
     app = Flask(__name__)
     app.config.from_object(config_class or get_config())
 
