@@ -7,7 +7,14 @@ Production (public server): set FLASK_ENV=production
 
 import os
 
+from dotenv import load_dotenv
+
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Load .env from the project folder BEFORE the settings below read it.
+# (Reading settings first and loading .env later left SECRET_KEY empty
+# when starting the app with `python app.py`.)
+load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
 
 
 class Config:
