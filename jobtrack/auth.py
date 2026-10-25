@@ -12,6 +12,8 @@ from flask import (
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from .db import get_db
+from .mailer import send_email
+from .tokens import make_reset_token, password_fingerprint, read_reset_token
 from .validation import MIN_PASSWORD_LENGTH, clean, is_valid_email
 
 bp = Blueprint("auth", __name__)
@@ -26,13 +28,24 @@ def load_logged_in_user():
     g.user = None
 
     if user_id is not None:
-        g.user = get_db().execute(
-            "SELECT id, name, email FROM users WHERE id = ?", (user_id,)
+        user = get_db().execute(
+            "SELECT id, name, email, password FROM users WHERE id = ?", (user_id,)
         ).fetchone()
 
-        # The account no longer exists: clear the stale session
-        if g.user is None:
+        # Log out if the account was deleted, or if the password changed
+        # since this session logged in (password change = sign out everywhere)
+        if user is None or session.get("pw") != password_fingerprint(user["password"]):
             session.clear()
+        else:
+            g.user = user
+
+
+def start_session(user):
+    """Log a user in. A fresh session stops an attacker who planted a
+    session cookie beforehand from riding along."""
+    session.clear()
+    session["user_id"] = user["id"]
+    session["pw"] = password_fingerprint(user["password"])
 
 
 def login_required(view):
@@ -128,10 +141,7 @@ def login():
             flash("Incorrect email or password.", "error")
             return render_template("auth/login.html", email=email), 401
 
-        # New session on login: stops an attacker who planted a
-        # session cookie beforehand from riding along
-        session.clear()
-        session["user_id"] = user["id"]
+        start_session(user)
 
         return redirect(
             safe_next(request.args.get("next")) or url_for("applications.dashboard")
@@ -146,3 +156,78 @@ def logout():
     session.clear()
     flash("You're logged out.", "success")
     return redirect(url_for("auth.login"))
+
+
+@bp.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+
+    if request.method == "POST":
+        email = clean(request.form, "email", 254).lower()
+
+        user = get_db().execute(
+            "SELECT * FROM users WHERE email = ?", (email,)
+        ).fetchone()
+
+        if user is not None:
+            link = url_for("auth.reset_password",
+                           token=make_reset_token(user), _external=True)
+            send_email(
+                user["email"],
+                "Reset your JobTrack password",
+                f"Hi {user['name']},\n\n"
+                f"Someone asked to reset the password for your JobTrack account. "
+                f"To choose a new password, open this link within 1 hour:\n\n"
+                f"{link}\n\n"
+                f"If this wasn't you, ignore this email. Your password stays the same.\n",
+            )
+
+        # Same message either way, so this page can't reveal who has an account
+        flash("If an account exists for that email, we've sent a link to reset "
+              "your password. It expires in 1 hour.", "success")
+        return redirect(url_for("auth.login"))
+
+    return render_template("auth/forgot_password.html")
+
+
+def _user_for_token(token):
+    """The user a reset token belongs to, or None if the token is invalid,
+    expired, or already used (the password changed since it was made)."""
+    data = read_reset_token(token)
+    if data is None:
+        return None
+    user_id, fingerprint = data
+    user = get_db().execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+    if user is None or password_fingerprint(user["password"]) != fingerprint:
+        return None
+    return user
+
+
+@bp.route("/reset-password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    user = _user_for_token(token)
+
+    if user is None:
+        flash("That reset link is invalid or has expired. Request a new one.", "error")
+        return redirect(url_for("auth.forgot_password"))
+
+    if request.method == "POST":
+        password = request.form.get("password") or ""
+        confirm = request.form.get("confirm_password") or ""
+
+        if len(password) < MIN_PASSWORD_LENGTH:
+            flash(f"Password must be at least {MIN_PASSWORD_LENGTH} characters.", "error")
+        elif password != confirm:
+            flash("The two passwords don't match.", "error")
+        else:
+            db = get_db()
+            db.execute("UPDATE users SET password = ? WHERE id = ?",
+                       (generate_password_hash(password), user["id"]))
+            db.commit()
+            # Changing the password makes this link (and every older one)
+            # stop working, and signs out every logged-in device
+            flash("Your password was reset. Log in with your new password.", "success")
+            return redirect(url_for("auth.login"))
+
+        return render_template("auth/reset_password.html", token=token), 400
+
+    return render_template("auth/reset_password.html", token=token)

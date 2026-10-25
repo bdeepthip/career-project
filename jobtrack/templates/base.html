@@ -32,6 +32,8 @@
                class="{{ 'active' if ep.startswith('inbox.') }}">Inbox</a>
             <a href="{{ url_for('profile.profile') }}"
                class="{{ 'active' if ep.startswith('profile.') }}">Profile</a>
+            <a href="{{ url_for('account.settings') }}"
+               class="{{ 'active' if ep.startswith('account.') }}">Account</a>
 
             <form method="POST" action="{{ url_for('auth.logout') }}" class="inline-form">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

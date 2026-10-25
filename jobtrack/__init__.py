@@ -33,12 +33,14 @@ def create_app(config_class=None):
     from .profile import bp as profile_bp
     from .jobs import bp as jobs_bp
     from .inbox import bp as inbox_bp
+    from .account import bp as account_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(applications_bp)
     app.register_blueprint(profile_bp)
     app.register_blueprint(jobs_bp)
     app.register_blueprint(inbox_bp)
+    app.register_blueprint(account_bp)
 
     register_error_pages(app)
     register_security_headers(app)

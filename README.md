@@ -9,6 +9,8 @@ match a job, and let job emails update your application statuses.
 - **Match Score**: compares your profile skills with a job's required skills
 - **Match Checker**: paste any job description and get a score
 - **Learning plan**: free courses and time estimates for missing skills
+- **Accounts**: password reset by email, change password (signs out
+  other devices), download all your data, delete your account
 - **Inbox**: paste a job email; JobTrack detects Applied / Interview /
   Offer / Rejected, matches the company, and updates the application
   (never moving a status backwards)
@@ -21,7 +23,10 @@ match a job, and let job emails update your application statuses.
 | Settings (development / production) | `jobtrack/config.py` |
 | Database connection per request | `jobtrack/db.py` |
 | Tables | `jobtrack/schema.sql` |
-| Accounts and `@login_required` | `jobtrack/auth.py` |
+| Accounts, password reset, `@login_required` | `jobtrack/auth.py` |
+| Account settings, export, deletion | `jobtrack/account.py` |
+| Signed, expiring reset tokens | `jobtrack/tokens.py` |
+| Outgoing email | `jobtrack/mailer.py` |
 | Applications and dashboard | `jobtrack/applications.py` |
 | Profile, skills, education, experience | `jobtrack/profile.py` |
 | Jobs, job details, Match Checker | `jobtrack/jobs.py` |
@@ -46,6 +51,9 @@ lets you fix a match by hand.
   `javascript:` links
 - Session cookies are HttpOnly and SameSite=Lax (Secure in production)
 - Safe redirects after login; security headers on every response
+- Password reset links are signed, expire after 1 hour, and stop
+  working once used; the reset page never reveals who has an account
+- Changing a password signs out every other device
 
 ## Run it locally
 
@@ -59,19 +67,22 @@ flask --app app seed
 python app.py                     # http://127.0.0.1:5001
 ```
 
+Without email settings in `.env`, password reset emails are printed
+in the terminal, so you can copy the link while developing.
+
 ## Tests
 
 ```bash
 python -m pytest
 ```
 
-63 tests cover accounts, data privacy between users, CSRF, input
+80 tests cover accounts, password reset, data export and deletion, data privacy between users, CSRF, input
 validation, Match Score, email parsing and the Inbox.
 
 ## Roadmap
 
 1. Foundation: code structure, CSRF, validation, tests (done)
-2. Accounts: password reset, account deletion, data export
+2. Accounts: password reset, account deletion, data export (done)
 3. PostgreSQL with migrations
 4. A personal email forwarding address for every user
 5. Public beta: deployment, domain, privacy policy
