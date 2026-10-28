@@ -97,6 +97,10 @@ def register():
         name = clean(request.form, "name", 100)
         email = clean(request.form, "email", 254).lower()
         password = request.form.get("password") or ""
+        account_type = request.form.get("account_type")
+        if account_type not in ("seeker", "employer"):
+            account_type = "seeker"
+        company = clean(request.form, "company", 120) if account_type == "employer" else None
 
         invite_code = current_app.config.get("BETA_INVITE_CODE")
         typed_code = (request.form.get("invite_code") or "").strip()
@@ -111,11 +115,14 @@ def register():
             error = "Enter a valid email address."
         elif len(password) < MIN_PASSWORD_LENGTH:
             error = f"Password must be at least {MIN_PASSWORD_LENGTH} characters."
+        elif account_type == "employer" and not company:
+            error = "Enter the company you're hiring for."
 
         if error is None:
             try:
                 db.session.add(User(name=name, email=email,
-                                    password=generate_password_hash(password)))
+                                    password=generate_password_hash(password),
+                                    account_type=account_type, company=company))
                 db.session.commit()
             except IntegrityError:
                 db.session.rollback()
@@ -128,7 +135,8 @@ def register():
 
         flash(error, "error")
         return render_template("auth/register.html", name=name, email=email,
-                               invite_code=typed_code), 400
+                               invite_code=typed_code, account_type=account_type,
+                               company=company), 400
 
     return render_template("auth/register.html")
 

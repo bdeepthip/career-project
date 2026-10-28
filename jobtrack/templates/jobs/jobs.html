@@ -64,7 +64,8 @@
             <span class="monogram monogram-{{ job['company'] | length % 6 }}" aria-hidden="true">{{ job["company"][:1] }}</span>
 
             <div class="job-row-main">
-                <h2><a href="{{ url_for('jobs.job_details', job_id=job['id']) }}">{{ job["title"] }}</a></h2>
+                <h2><a href="{{ url_for('jobs.job_details', job_id=job['id']) }}">{{ job["title"] }}</a>
+                    {% if job["posted_by_user_id"] %}<span class="easy-tag">Easy Apply</span>{% endif %}</h2>
                 <p class="job-row-company">{{ job["company"] }}</p>
                 <ul class="job-facts">
                     <li>{{ icon("pin") }}{{ job["location"] }}</li>
@@ -80,7 +81,13 @@
                     <p class="match match-{{ level }}"><strong>{{ job["match_score"] }}%</strong> match</p>
                 {% endif %}
                 <div class="job-row-actions">
-                    {% if job["job_url"] %}
+                    {% if job["posted_by_user_id"] %}
+                        {% if job["id"] in applied_job_ids %}
+                            <span class="applied-tag">Applied</span>
+                        {% elif not g.user.is_employer %}
+                            <a class="btn btn-small" href="{{ url_for('apply.easy_apply', job_id=job['id']) }}">Easy Apply</a>
+                        {% endif %}
+                    {% elif job["job_url"] %}
                         <a class="btn btn-small" href="{{ job['job_url'] }}" target="_blank"
                            rel="noopener noreferrer">Apply on company site{{ icon("external") }}</a>
                     {% endif %}
@@ -98,7 +105,7 @@
     {% endfor %}
 </div>
 
-<p class="footnote">These are sample listings while GAJ is in beta. To check a real posting, paste it into the
-    <a href="{{ url_for('jobs.match_checker') }}">Match Checker</a>.</p>
+<p class="footnote">Jobs marked Easy Apply were posted on GAJ by employers. The rest are sample listings while GAJ
+    is in beta; to check a real posting, paste it into the <a href="{{ url_for('jobs.match_checker') }}">Match Checker</a>.</p>
 
 {% endblock %}

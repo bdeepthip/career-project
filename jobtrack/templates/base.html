@@ -50,6 +50,12 @@
     </a>
 
     <nav class="sidebar-nav" aria-label="Main">
+        {% if g.user.is_employer %}
+        {{ nav_item("employer.posts", "Job posts", "jobs", ep in ("employer.posts", "employer.applicants", "employer.applicant", "employer.edit_job")) }}
+        {{ nav_item("employer.new_job", "Post a job", "plus", ep == "employer.new_job") }}
+        {{ nav_item("messages.conversations", "Messages", "messages", ep.startswith("messages."), unread_messages) }}
+        {{ nav_item("notifications.notifications", "Notifications", "notifications", ep.startswith("notifications."), unread_notifications) }}
+        {% else %}
         {{ nav_item("applications.dashboard", "Dashboard", "dashboard", ep.startswith("applications.")) }}
         {{ nav_item("jobs.jobs", "Jobs", "jobs", ep in ("jobs.jobs", "jobs.job_details")) }}
         {{ nav_item("profile.profile", "Profile", "profile", ep.startswith("profile.")) }}
@@ -57,10 +63,12 @@
         {{ nav_item("notifications.notifications", "Notifications", "notifications", ep.startswith("notifications."), unread_notifications) }}
         {{ nav_item("inbox.inbox", "Inbox", "inbox", ep.startswith("inbox.")) }}
         {{ nav_item("jobs.match_checker", "Match Checker", "match", ep == "jobs.match_checker") }}
+        {% endif %}
     </nav>
 
     <div class="sidebar-bottom">
 
+        {% if not g.user.is_employer %}
         <div class="shift" data-screen-meter>
             <div class="shift-head">
                 {{ icon("clock") }}
@@ -70,6 +78,7 @@
             <progress class="shift-bar" max="100" value="{{ screen_percent }}" data-screen-bar
                       aria-label="Progress toward 7 hours today">{{ screen_percent }}%</progress>
         </div>
+        {% endif %}
 
         {{ nav_item("account.settings", "Account", "account", ep.startswith("account.")) }}
         <form method="POST" action="{{ url_for('auth.logout') }}">

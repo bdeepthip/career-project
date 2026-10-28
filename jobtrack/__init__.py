@@ -31,6 +31,14 @@ CONTENT_SECURITY_POLICY = "; ".join([
 ])
 
 
+MB = 1024 * 1024
+UPLOAD_LIMITS = {
+    "inbound.receive": 25 * MB,          # forwarded emails can carry attachments
+    "profile.upload_resume": 6 * MB,     # resume PDFs (5 MB max, plus form overhead)
+    "apply.easy_apply": 6 * MB,
+}
+
+
 def create_app(config_class=None):
     app = Flask(__name__)
     app.config.from_object(config_class or get_config())
@@ -54,6 +62,16 @@ def create_app(config_class=None):
         logging.basicConfig(level=logging.INFO,
                             format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
+    # Bigger uploads for a few routes. Registered BEFORE CSRF protection,
+    # because the CSRF check reads the form and would refuse a 3 MB resume
+    # under the normal 1 MB limit.
+    @app.before_request
+    def allow_bigger_uploads():
+        from flask import request
+        limit = UPLOAD_LIMITS.get(request.endpoint)
+        if limit:
+            request.max_content_length = limit
+
     db.init_app(app)
     csrf.init_app(app)
     limiter.init_app(app)
@@ -70,6 +88,8 @@ def create_app(config_class=None):
     from .phone import bp as phone_bp
     from .messages import bp as messages_bp
     from .notifications import bp as notifications_bp
+    from .employer import bp as employer_bp
+    from .apply import bp as apply_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(applications_bp)
@@ -83,6 +103,8 @@ def create_app(config_class=None):
     app.register_blueprint(phone_bp)
     app.register_blueprint(messages_bp)
     app.register_blueprint(notifications_bp)
+    app.register_blueprint(employer_bp)
+    app.register_blueprint(apply_bp)
     # Email services can't send a CSRF token; the webhook checks its own secret
     csrf.exempt("jobtrack.inbound.receive")
 

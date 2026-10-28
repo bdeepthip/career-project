@@ -123,6 +123,34 @@
             {% endif %}
         </section>
 
+        <section class="profile-section" id="resume">
+            <h2>Resume</h2>
+            {% if resume %}
+                <div class="resume-file">
+                    <span class="resume-icon" aria-hidden="true">PDF</span>
+                    <div>
+                        <a href="{{ url_for('profile.download_resume') }}">{{ resume.filename }}</a>
+                        <p class="muted small">{{ (resume.size / 1024) | round | int }} KB, uploaded {{ resume.uploaded_at | time_ago_utc }}</p>
+                    </div>
+                    <form method="POST" action="{{ url_for('profile.delete_resume') }}"
+                          data-confirm="Remove your saved resume?">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-small btn-danger-quiet" type="submit">Remove</button>
+                    </form>
+                </div>
+            {% else %}
+                <p class="muted small">Upload a PDF once and Easy Apply sends it with every application.</p>
+            {% endif %}
+            <form method="POST" action="{{ url_for('profile.upload_resume') }}" enctype="multipart/form-data"
+                  class="upload-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <label class="sr-only" for="resume-file">Resume PDF</label>
+                <input type="file" id="resume-file" name="resume" accept="application/pdf,.pdf" required>
+                <button class="btn btn-quiet" type="submit">{{ "Replace" if resume else "Upload" }}</button>
+            </form>
+            <p class="field-hint">PDF only, up to 5 MB.</p>
+        </section>
+
         <section class="profile-section" id="skills">
             <h2>Skills <span class="count">{{ skills | length }}</span></h2>
             <p class="muted small">Your match score compares these with each job. Add several at once with commas.</p>

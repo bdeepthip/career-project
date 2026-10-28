@@ -8,6 +8,25 @@
 <form method="POST">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
+    {% set kind = account_type or request.args.get("as") or "seeker" %}
+    <fieldset class="account-type">
+        <legend>I'm here to</legend>
+        <label class="type-option">
+            <input type="radio" name="account_type" value="seeker" {{ "checked" if kind != "employer" }}>
+            <span><strong>Find a job</strong><small>Track applications and Easy Apply</small></span>
+        </label>
+        <label class="type-option">
+            <input type="radio" name="account_type" value="employer" {{ "checked" if kind == "employer" }}>
+            <span><strong>Hire</strong><small>Post jobs and review applicants</small></span>
+        </label>
+    </fieldset>
+
+    <div class="form-group employer-only">
+        <label for="company">Company you're hiring for</label>
+        <input type="text" id="company" name="company" value="{{ company or '' }}"
+               autocomplete="organization" maxlength="120" placeholder="Example: Northwind Health">
+    </div>
+
     <div class="form-group">
         <label for="name">Full name</label>
         <input type="text" id="name" name="name" value="{{ name or '' }}"

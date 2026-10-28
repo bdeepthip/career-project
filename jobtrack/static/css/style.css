@@ -1602,3 +1602,186 @@ td strong { display: block; color: var(--ink); }
     .note { grid-template-columns: 32px minmax(0, 1fr); }
     .note-time { grid-column: 2; }
 }
+
+
+/* =========================================================
+   Sign-up type, resume, Easy Apply, employer pages
+   ========================================================= */
+
+.account-type {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 0 0 18px;
+    border: 0;
+}
+
+.account-type legend { margin-bottom: 8px; color: var(--ink); font-size: 14px; font-weight: 600; }
+
+.type-option {
+    position: relative;
+    margin: 0;
+    padding: 12px 14px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-small);
+    cursor: pointer;
+}
+
+.type-option input { position: absolute; opacity: 0; }
+.type-option strong { display: block; color: var(--ink); font-size: 15px; }
+.type-option small { display: block; color: var(--muted); font-size: 13px; font-weight: 400; }
+.type-option:has(input:checked) { border-color: var(--action); box-shadow: 0 0 0 2px var(--action-soft); background: #f7f8ff; }
+.type-option:has(input:focus-visible) { outline: 3px solid var(--action); outline-offset: 2px; }
+
+/* The company field only matters for employers */
+.employer-only { display: none; }
+form:has(input[value="employer"]:checked) .employer-only { display: block; }
+
+.resume-file {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-small);
+    background: var(--surface);
+}
+
+.resume-file a { font-weight: 600; overflow-wrap: anywhere; }
+
+.resume-icon {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 48px;
+    border-radius: 6px;
+    background: var(--red-soft);
+    color: var(--red);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.upload-form { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.upload-form input[type="file"] { flex: 1; min-width: 200px; padding: 8px; background: var(--surface); }
+
+.easy-tag,
+.applied-tag,
+.closed-tag {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    vertical-align: 3px;
+}
+
+.easy-tag { background: var(--marigold-soft); color: #7a4a00; }
+.applied-tag { margin: 0; padding: 6px 12px; background: var(--green-soft); color: var(--green); font-size: 13.5px; }
+.closed-tag { background: #eceef5; color: var(--muted); }
+.post-row.is-closed .job-row-main h2 a { color: var(--muted); }
+
+.apply-box {
+    margin-top: 24px;
+    padding: 20px 22px;
+    border: 1px solid #f2d48a;
+    border-radius: var(--radius);
+    background: var(--marigold-soft);
+}
+
+.apply-box .job-actions { margin-top: 14px; }
+.apply-status { color: var(--ink); font-weight: 550; }
+.apply-status .status { margin-left: 4px; }
+
+.report-job { margin-top: 18px; font-size: 14px; }
+.report-job summary { color: var(--muted); cursor: pointer; }
+.report-job form { display: grid; gap: 8px; max-width: 480px; margin-top: 10px; }
+.report-job label { font-weight: 500; color: var(--muted); }
+
+.apply-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 28px;
+    align-items: start;
+}
+
+.form-section { margin-top: 24px; font-size: 18px; }
+.panel h2 + .resume-file { margin-top: 12px; }
+.apply-layout form input[type="file"] { padding: 8px; }
+
+.checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 10px 0 0;
+    font-weight: 500;
+}
+
+.checkbox input { width: auto; }
+.apply-layout textarea { margin-bottom: 16px; }
+
+.sent-preview { position: sticky; top: 24px; font-size: 14.5px; }
+.sent-preview h2 { font-size: 17px; margin-bottom: 12px; }
+.preview-name { color: var(--ink); font-size: 20px; font-weight: 700; }
+.preview-facts { margin: 6px 0 4px; color: var(--muted); list-style: none; }
+.preview-label { margin-top: 14px; color: var(--muted); font-size: 13px; font-weight: 600; }
+
+.applicant-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.applicant-count strong { font-size: 22px; font-weight: 750; font-stretch: 85%; color: var(--ink); }
+
+.applicant-row {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    color: var(--text);
+    text-decoration: none;
+}
+
+.applicant-row + .applicant-row { border-top: 1px solid var(--line); }
+.applicant-row:hover { background: var(--surface-2); color: var(--text); }
+.applicant-main { display: flex; flex-direction: column; min-width: 0; }
+.applicant-main strong { color: var(--ink); font-size: 16.5px; }
+
+.sub-status {
+    min-width: 92px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 650;
+    text-align: center;
+}
+
+.sub-new { background: var(--marigold-soft); color: #7a4a00; }
+.sub-reviewing { background: var(--action-soft); color: #2b3ab4; }
+.sub-interview { background: var(--amber-soft); color: var(--amber); }
+.sub-offer { background: var(--green-soft); color: var(--green); }
+.sub-rejected { background: var(--red-soft); color: var(--red); }
+
+.applicant-hero { grid-template-columns: auto minmax(0, 1fr); }
+.decision { position: sticky; top: 24px; display: grid; gap: 10px; }
+.decision .strength-label { margin-bottom: 4px; }
+.status-form { display: grid; gap: 8px; margin-top: 8px; padding-top: 14px; border-top: 1px solid var(--line); }
+.status-form label { margin: 0; }
+
+@media (max-width: 900px) {
+    .apply-layout { grid-template-columns: 1fr; }
+    .sent-preview, .decision { position: static; }
+}
+
+@media (max-width: 640px) {
+    .applicant-row { grid-template-columns: 40px minmax(0, 1fr); }
+    .applicant-row .match, .applicant-row .sub-status { grid-column: 2; justify-self: start; }
+    .account-type { grid-template-columns: 1fr; }
+}

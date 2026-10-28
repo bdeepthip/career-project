@@ -158,6 +158,6 @@ def test_profile_strength_grows_as_you_fill_it_in(client, logged_in):
                                   "target_role": "Data Engineer", "about": "I build pipelines."})
     client.post("/skills/add", data={"skill_name": "Python, SQL, Git, Airflow, Tableau"})
     page = client.get("/profile").get_data(as_text=True)
-    assert "71%" in page            # 5 of 7 done
+    assert "62%" in page            # 5 of 8 done (62.5 rounds to 62)
     assert "Add education" in page and "Add headline" not in page
     assert ">TU</div>" in page      # initials of "Test User"

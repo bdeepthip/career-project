@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}{{ profile.name }}{% endblock %}
+
+{% block content %}
+<a class="back-link" href="{{ url_for('employer.applicants', job_id=job.id) }}">← Applicants for {{ job.title }}</a>
+
+<div class="apply-layout">
+    <section>
+        <div class="profile-hero applicant-hero">
+            <div class="avatar" aria-hidden="true">{{ (profile.name.split() | map("first") | join)[:2] | upper }}</div>
+            <div class="profile-hero-text">
+                <h1>{{ profile.name }}</h1>
+                {% if profile.headline %}<p class="profile-headline">{{ profile.headline }}</p>{% endif %}
+                <ul class="profile-facts">
+                    <li><a href="mailto:{{ profile.email }}">{{ profile.email }}</a></li>
+                    {% if profile.phone %}<li>{{ display_phone(profile.phone) if profile.phone.startswith("+1") else profile.phone }}</li>{% endif %}
+                    {% if profile.location %}<li>{{ profile.location }}</li>{% endif %}
+                    {% if profile.experience_level %}<li>{{ profile.experience_level }}</li>{% endif %}
+                </ul>
+            </div>
+        </div>
+
+        {% if submission.note %}
+            <section class="profile-section">
+                <h2>Their note</h2>
+                <p class="about-text">{{ submission.note }}</p>
+            </section>
+        {% endif %}
+
+        {% if profile.about %}
+            <section class="profile-section">
+                <h2>About</h2>
+                <p class="about-text">{{ profile.about }}</p>
+            </section>
+        {% endif %}
+
+        <section class="profile-section">
+            <h2>Experience</h2>
+            {% if profile.experience %}
+                <ol class="timeline">
+                    {% for x in profile.experience %}
+                        <li class="timeline-item">
+                            <h3>{{ x.title }}</h3>
+                            <p class="timeline-org">{{ x.company }}</p>
+                            {% if x.start %}<p class="timeline-dates">{{ x.start | month_label }} to {{ x.end | month_label if x.end else "present" }}</p>{% endif %}
+                            {% if x.description %}<p class="timeline-text">{{ x.description }}</p>{% endif %}
+                        </li>
+                    {% endfor %}
+                </ol>
+            {% else %}<p class="muted">None listed.</p>{% endif %}
+        </section>
+
+        <section class="profile-section">
+            <h2>Education</h2>
+            {% for e in profile.education %}
+                <p><strong>{{ e.degree }}{% if e.field %}, {{ e.field }}{% endif %}</strong><br>{{ e.institution }}{% if e.years %}, {{ e.years }}{% endif %}</p>
+            {% else %}<p class="muted">None listed.</p>{% endfor %}
+        </section>
+    </section>
+
+    <aside class="panel decision">
+        <p class="strength-number">{{ score }}%</p>
+        <p class="strength-label">skills match for {{ job.title }}</p>
+        {% if matched %}<p class="small"><strong>Has:</strong> {{ matched | join(", ") }}</p>{% endif %}
+        {% if missing %}<p class="small"><strong>Missing:</strong> {{ missing | join(", ") }}</p>{% endif %}
+
+        {% if submission.resume_data %}
+            <a class="btn btn-block btn-quiet" href="{{ url_for('employer.applicant_resume', submission_id=submission.id) }}">Download resume (PDF)</a>
+        {% endif %}
+        <a class="btn btn-block btn-quiet" href="{{ url_for('messages.conversations', to=profile.email) }}">Message {{ profile.name.split()[0] }}</a>
+
+        <form method="POST" class="status-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label for="status">Status</label>
+            <select id="status" name="status">
+                {% for s in statuses %}
+                    <option value="{{ s }}" {{ "selected" if submission.status == s }}>{{ s }}</option>
+                {% endfor %}
+            </select>
+            <button class="btn btn-block" type="submit">Update status</button>
+            <p class="field-hint">{{ profile.name.split()[0] }} gets a notification, and their GAJ Dashboard updates.</p>
+        </form>
+        <p class="muted small">Applied {{ submission.created_at | time_ago_utc }}</p>
+    </aside>
+</div>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Applicants: {{ job.title }}{% endblock %}
+
+{% block content %}
+<a class="back-link" href="{{ url_for('employer.posts') }}">← Your job posts</a>
+<div class="page-header">
+    <div>
+        <h1>{{ job.title }}</h1>
+        <p class="page-subtitle">{{ rows | length }} applicant{{ "s" if rows | length != 1 }}{% if status_filter %} marked {{ status_filter }}{% endif %}</p>
+    </div>
+    <a class="btn btn-quiet" href="{{ url_for('jobs.job_details', job_id=job.id) }}">View job post</a>
+</div>
+
+<nav class="chips" aria-label="Filter applicants">
+    <a class="chip{{ ' is-selected' if not status_filter }}" href="{{ url_for('employer.applicants', job_id=job.id) }}">All</a>
+    {% for s in statuses %}
+        <a class="chip{{ ' is-selected' if status_filter == s }}" href="{{ url_for('employer.applicants', job_id=job.id, status=s) }}">{{ s }}</a>
+    {% endfor %}
+</nav>
+
+{% if rows %}
+    <div class="job-list">
+        {% for row in rows %}
+            {% set p = row.profile %}
+            {% set level = "high" if row.score >= 70 else ("medium" if row.score >= 40 else "low") %}
+            <a class="applicant-row" href="{{ url_for('employer.applicant', submission_id=row.submission.id) }}">
+                <span class="person-avatar" aria-hidden="true">{{ (p.name.split() | map("first") | join)[:2] | upper }}</span>
+                <span class="applicant-main">
+                    <strong>{{ p.name }}</strong>
+                    <span class="muted">{{ p.headline or "No headline" }}</span>
+                    <span class="muted small">Applied {{ row.submission.created_at | time_ago_utc }}{% if p.location %}, {{ p.location }}{% endif %}</span>
+                </span>
+                <span class="match match-{{ level }}"><strong>{{ row.score }}%</strong> match</span>
+                <span class="sub-status sub-{{ row.submission.status | lower }}">{{ row.submission.status }}</span>
+            </a>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty-state">
+        <h2>{{ "No applicants yet" if not status_filter else "Nobody here" }}</h2>
+        <p>{{ "People who Easy Apply show up here, newest first." if not status_filter else "No applicants have this status." }}</p>
+    </div>
+{% endif %}
+{% endblock %}

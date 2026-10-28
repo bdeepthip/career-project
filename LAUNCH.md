@@ -160,6 +160,8 @@ Use a test account first, then your real one.
 - [ ] Add an application for a company, then forward one of that company's emails to your address. The status updates
 - [ ] Email `hello@yourdomain.com` from another account. It arrives in your Gmail
 - [ ] If you set up Twilio: Account → add your phone, enter the texted code, log out, then log in with **Phone**
+- [ ] Sign up a second account as **Hire**, post a job, then Easy Apply to it from your seeker account with a PDF resume. Move the applicant to Interview and check the seeker's Dashboard and Notifications
+- [ ] Send a message between the two accounts
 - [ ] Account: **Download my data** works
 - [ ] Delete the test account
 - [ ] The Privacy and Terms pages show your contact email

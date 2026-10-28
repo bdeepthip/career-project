@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Easy Apply: {{ job.title }}{% endblock %}
+
+{% block content %}
+<a class="back-link" href="{{ url_for('jobs.job_details', job_id=job.id) }}">← Back to the job</a>
+
+<div class="apply-layout">
+    <section>
+        <h1>Apply to {{ job.title }}</h1>
+        <p class="page-subtitle">{{ job.company }}{% if job.location %}, {{ job.location }}{% endif %}</p>
+
+        <form method="POST" enctype="multipart/form-data" class="panel">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <h2>Resume</h2>
+            {% if resume %}
+                <div class="resume-file">
+                    <span class="resume-icon" aria-hidden="true">PDF</span>
+                    <div>
+                        <strong>{{ resume.filename }}</strong>
+                        <p class="muted small">Your saved resume. It's sent unless you choose another file below.</p>
+                    </div>
+                </div>
+                <label for="resume">Use a different PDF for this job (optional)</label>
+            {% else %}
+                <label for="resume">Your resume (PDF, up to 5 MB)</label>
+            {% endif %}
+            <input type="file" id="resume" name="resume" accept="application/pdf,.pdf" {{ "required" if not resume }}>
+            <label class="checkbox">
+                <input type="checkbox" name="save_resume" value="1" {{ "checked" if not resume }}>
+                Save this file to my profile for next time
+            </label>
+
+            <h2 class="form-section">A note to the employer <span class="muted small">(optional)</span></h2>
+            <label class="sr-only" for="note">Note</label>
+            <textarea id="note" name="note" rows="5" maxlength="2000"
+                      placeholder="Two or three sentences on why you fit this role.">{{ note or "" }}</textarea>
+
+            <button class="btn btn-large" type="submit">Send application</button>
+            <p class="field-hint">You can withdraw it later from the job page.</p>
+        </form>
+    </section>
+
+    <aside class="panel sent-preview">
+        <h2>What {{ job.company }} will see</h2>
+        <p class="preview-name">{{ snapshot.name }}</p>
+        {% if snapshot.headline %}<p>{{ snapshot.headline }}</p>{% endif %}
+        <ul class="preview-facts">
+            <li>{{ snapshot.email }}</li>
+            {% if snapshot.phone %}<li>{{ display_phone(snapshot.phone) if snapshot.phone.startswith("+1") else snapshot.phone }}</li>{% endif %}
+            {% if snapshot.location %}<li>{{ snapshot.location }}</li>{% endif %}
+        </ul>
+        <p class="preview-label">Skills</p>
+        {% if snapshot.skills %}
+            <p>{{ snapshot.skills | join(", ") }}</p>
+        {% else %}
+            <p class="muted">None yet. <a href="{{ url_for('profile.profile') }}#skills">Add skills</a></p>
+        {% endif %}
+        <p class="preview-label">Experience</p>
+        {% for x in snapshot.experience %}
+            <p>{{ x.title }}, {{ x.company }}</p>
+        {% else %}
+            <p class="muted">None yet.</p>
+        {% endfor %}
+        <p class="preview-label">Education</p>
+        {% for e in snapshot.education %}
+            <p>{{ e.degree }}, {{ e.institution }}</p>
+        {% else %}
+            <p class="muted">None yet.</p>
+        {% endfor %}
+        <p class="field-hint"><a href="{{ url_for('profile.profile') }}">Edit your profile</a> first if anything is missing.</p>
+    </aside>
+</div>
+{% endblock %}

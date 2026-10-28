@@ -13,7 +13,7 @@ existing database.db keeps working without moving any data.
 import secrets
 
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import ForeignKey, Index, Integer, String, Text, UniqueConstraint
+from sqlalchemy import ForeignKey, Index, Integer, LargeBinary, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 db = SQLAlchemy()
@@ -57,6 +57,14 @@ class User(RowAccessMixin, db.Model):
     # Only set after the person typed the code we texted, so nobody can
     # claim someone else's number.
     phone: Mapped[str | None] = mapped_column(Text)
+    # "seeker" (looking for a job) or "employer" (hiring: posts jobs, reviews applicants)
+    account_type: Mapped[str] = mapped_column(Text, nullable=False, default="seeker",
+                                              server_default="seeker")
+    company: Mapped[str | None] = mapped_column(Text)   # employers: the company they hire for
+
+    @property
+    def is_employer(self):
+        return self.account_type == "employer"
 
     # cascade="all, delete-orphan": deleting a user deletes everything they own
     applications = relationship("JobApplication", back_populates="user",
@@ -151,6 +159,14 @@ class Job(RowAccessMixin, db.Model):
     description: Mapped[str | None] = mapped_column(Text)
     job_url: Mapped[str | None] = mapped_column(Text)
     posted_date: Mapped[str | None] = mapped_column(Text)
+    # Set for jobs posted on GAJ by an employer account (these take Easy Apply).
+    # Empty for listings that live on a company's own site.
+    posted_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"))
+    is_open: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default="1")
+
+    @property
+    def easy_apply(self):
+        return self.posted_by_user_id is not None
 
 
 class LearningResource(RowAccessMixin, db.Model):
@@ -271,3 +287,42 @@ class Notification(RowAccessMixin, db.Model):
     link: Mapped[str | None] = mapped_column(Text)                # a GAJ path, e.g. /messages/4
     created_at: Mapped[str] = mapped_column(Text, nullable=False)
     read_at: Mapped[str | None] = mapped_column(Text)
+
+
+class Resume(RowAccessMixin, db.Model):
+    """A job seeker's saved resume (PDF), reused for every Easy Apply."""
+    __tablename__ = "resumes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, unique=True)
+    filename: Mapped[str] = mapped_column(Text, nullable=False)
+    data: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
+    size: Mapped[int] = mapped_column(Integer, nullable=False)
+    uploaded_at: Mapped[str] = mapped_column(Text, nullable=False)
+
+
+class Submission(RowAccessMixin, db.Model):
+    """An Easy Apply application: what the seeker sent to the employer.
+    Keeps its own copy of the resume and profile as they were when sent,
+    so later edits don't change an application already submitted."""
+    __tablename__ = "submissions"
+    __table_args__ = (
+        UniqueConstraint("job_id", "applicant_id", name="uq_submission_job_applicant"),
+        Index("idx_submissions_job", "job_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    job_id: Mapped[int] = mapped_column(ForeignKey("jobs.id"), nullable=False)
+    applicant_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    # The applicant's own Dashboard row for this job
+    application_id: Mapped[int | None] = mapped_column(
+        ForeignKey("job_applications.id", ondelete="SET NULL"))
+    note: Mapped[str | None] = mapped_column(Text)
+    profile_json: Mapped[str] = mapped_column(Text, nullable=False)
+    resume_filename: Mapped[str | None] = mapped_column(Text)
+    resume_data: Mapped[bytes | None] = mapped_column(LargeBinary)
+    status: Mapped[str] = mapped_column(Text, nullable=False, default="New")
+    created_at: Mapped[str] = mapped_column(Text, nullable=False)   # UTC
+    updated_at: Mapped[str] = mapped_column(Text, nullable=False)   # UTC
+
+    job = relationship("Job")

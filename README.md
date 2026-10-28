@@ -1,7 +1,8 @@
 # GAJ (Get A Job)
 
-A job application tracker: log every application, see how your skills
-match a job, and let job emails update your application statuses.
+A job search app: track every application, see how your skills match a
+job, Easy Apply to jobs employers post on GAJ, message other users, and
+let job emails update your application statuses.
 
 ## Features
 
@@ -14,6 +15,18 @@ match a job, and let job emails update your application statuses.
 - **Inbox**: paste a job email; GAJ detects Applied / Interview /
   Offer / Rejected, matches the company, and updates the application
   (never moving a status backwards)
+- **Forwarding address**: forward job emails to your private GAJ address
+  and statuses update on their own
+- **Easy Apply**: apply to jobs posted on GAJ with your profile, resume
+  PDF and a note; withdraw any time
+- **Employer accounts**: post jobs, review applicants with a match score,
+  download resumes, and move people through New → Reviewing → Interview →
+  Offer / Rejected (the applicant's Dashboard updates and they're notified)
+- **Messages**: direct messages between users, with block and report
+- **Notifications**: new messages, status changes, new jobs that match you
+- **Phone log-in**: log in with a text-message code (Twilio Verify)
+- **Daily line and screen time**: a new line of encouragement every day,
+  and a meter of active time on GAJ toward a 7-hour daily goal
 
 ## How it works
 
@@ -35,6 +48,11 @@ match a job, and let job emails update your application statuses.
 | Inbox routes | `jobtrack/inbox.py` |
 | Forwarding addresses and the incoming-email webhook | `jobtrack/inbound.py` |
 | Privacy Policy and Terms pages | `jobtrack/pages.py` |
+| Easy Apply, resume PDFs | `jobtrack/apply.py`, `jobtrack/resumes.py` |
+| Employer job posts and applicants | `jobtrack/employer.py` |
+| Messages, notifications | `jobtrack/messages.py`, `jobtrack/notifications.py` |
+| Phone log-in by text code | `jobtrack/phone.py`, `jobtrack/sms.py` |
+| Screen time, daily line | `jobtrack/activity.py`, `jobtrack/daily.py` |
 | CSRF and rate-limit setup | `jobtrack/extensions.py` |
 | Deployment (Render) | `render.yaml`, `LAUNCH.md` |
 | Email status detection and matching | `jobtrack/email_parser.py` |
@@ -131,7 +149,7 @@ python -m pytest
 TEST_DATABASE_URL=postgresql://user:pass@localhost/jobtrack_test python -m pytest
 ```
 
-CI runs every test on both SQLite and PostgreSQL. 117 tests cover accounts, password reset, data export and deletion, data privacy between users, CSRF, input
+CI runs every test on both SQLite and PostgreSQL. 202 tests cover accounts, password reset, data export and deletion, data privacy between users, CSRF, input
 validation, Match Score, email parsing, the Inbox, forwarded email, rate limits and production safety checks.
 
 ## Roadmap

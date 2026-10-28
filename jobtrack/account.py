@@ -14,8 +14,8 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from .auth import login_required, start_session
 from .inbox import forwarding_address
 from .models import (
-    Block, Education, Experience, JobApplication, JobEmail, Message, Notification, Profile,
-    Report, Skill, User, UserActivity, db
+    Block, Education, Experience, Job, JobApplication, JobEmail, Message, Notification, Profile,
+    Report, Resume, Skill, Submission, User, UserActivity, db
 )
 from .validation import MIN_PASSWORD_LENGTH, clean
 
@@ -115,6 +115,18 @@ def export_data():
         ],
         "notifications": _rows(Notification, ["kind", "text", "created_at", "read_at"],
                                Notification.created_at),
+        "resume": (lambda r: {"filename": r.filename, "uploaded_at_utc": r.uploaded_at} if r else None)(
+            Resume.query.filter_by(user_id=g.user.id).first()),
+        "easy_apply_applications": [
+            {"job": s.job.title, "company": s.job.company, "status": s.status,
+             "note": s.note, "applied_at_utc": s.created_at, "resume_sent": s.resume_filename}
+            for s in Submission.query.filter_by(applicant_id=g.user.id).order_by(Submission.created_at)
+        ],
+        "job_posts": [
+            {"title": j.title, "company": j.company, "location": j.location, "posted": j.posted_date,
+             "open": bool(j.is_open), "applicants": Submission.query.filter_by(job_id=j.id).count()}
+            for j in Job.query.filter_by(posted_by_user_id=g.user.id).order_by(Job.posted_date)
+        ],
     }
 
     filename = f"gaj-export-{date.today().isoformat()}.json"
@@ -137,6 +149,17 @@ def delete_account():
     uid = g.user.id
 
     # One transaction: either everything is deleted, or nothing is
+    # Easy Apply: applications this person sent, and (employers) their job
+    # posts with every application to them
+    Submission.query.filter_by(applicant_id=uid).delete()
+    own_job_ids = [job_id for (job_id,) in db.session.query(Job.id).filter_by(posted_by_user_id=uid)]
+    if own_job_ids:
+        Submission.query.filter(Submission.job_id.in_(own_job_ids)).delete()
+        for job_id in own_job_ids:
+            Notification.query.filter_by(link=url_for("jobs.job_details", job_id=job_id)).delete()
+        Job.query.filter(Job.id.in_(own_job_ids)).delete()
+    Resume.query.filter_by(user_id=uid).delete()
+
     for model in USER_MODELS:
         model.query.filter_by(user_id=uid).delete()
     # Conversations, blocks and reports involving this person, in both directions
