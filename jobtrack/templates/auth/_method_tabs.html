@@ -1,0 +1,11 @@
+{# Email / Phone switch on the log-in pages. Plain links, so it works without JavaScript. #}
+{% if phone_login_enabled %}
+<nav class="method-tabs" aria-label="How to log in">
+    <a href="{{ url_for('auth.login', next=request.args.get('next')) }}"
+       class="method-tab{{ ' is-selected' if active == 'email' }}"
+       {% if active == 'email' %}aria-current="page"{% endif %}>Email</a>
+    <a href="{{ url_for('phone.login_phone', next=request.args.get('next')) }}"
+       class="method-tab{{ ' is-selected' if active == 'phone' }}"
+       {% if active == 'phone' %}aria-current="page"{% endif %}>Phone</a>
+</nav>
+{% endif %}

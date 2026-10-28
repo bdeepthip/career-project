@@ -87,7 +87,7 @@ def export_data():
 
     data = {
         "exported_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "account": {"name": g.user.name, "email": g.user.email,
+        "account": {"name": g.user.name, "email": g.user.email, "phone": g.user.phone,
                     "forwarding_address": forwarding_address(g.user)},
         "profile": {f: getattr(profile, f) for f in profile_fields} if profile else None,
         "skills": [s["skill_name"] for s in _rows(Skill, ["skill_name"], Skill.skill_name)],

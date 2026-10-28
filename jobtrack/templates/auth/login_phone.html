@@ -1,0 +1,24 @@
+{% extends "auth/_layout.html" %}
+
+{% block title %}Log in with phone{% endblock %}
+{% block auth_heading %}Welcome back{% endblock %}
+{% block auth_lead %}We'll text you a 6-digit code. No password needed.{% endblock %}
+
+{% block auth_form %}
+{% with active = "phone" %}{% include "auth/_method_tabs.html" %}{% endwith %}
+<form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="form-group">
+        <label for="phone">Mobile number</label>
+        <input type="tel" id="phone" name="phone" value="{{ phone or '' }}"
+               placeholder="(215) 555-0123" autocomplete="tel-national" inputmode="tel"
+               maxlength="40" required autofocus>
+        <p class="field-hint">US or Canadian numbers. Add your number in Account first.</p>
+    </div>
+    <button class="btn btn-block" type="submit">Text me a code</button>
+</form>
+{% endblock %}
+
+{% block auth_switch %}
+New to GAJ? <a href="{{ url_for('auth.register') }}">Create an account</a>
+{% endblock %}

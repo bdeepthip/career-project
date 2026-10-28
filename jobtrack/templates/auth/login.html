@@ -5,6 +5,7 @@
 {% block auth_lead %}Log in and pick up where you left off.{% endblock %}
 
 {% block auth_form %}
+{% with active = "email" %}{% include "auth/_method_tabs.html" %}{% endwith %}
 <form method="POST">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 

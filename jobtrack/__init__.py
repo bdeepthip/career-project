@@ -67,6 +67,7 @@ def create_app(config_class=None):
     from .inbound import bp as inbound_bp
     from .pages import bp as pages_bp
     from .activity import bp as activity_bp
+    from .phone import bp as phone_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(applications_bp)
@@ -77,6 +78,7 @@ def create_app(config_class=None):
     app.register_blueprint(inbound_bp)
     app.register_blueprint(pages_bp)
     app.register_blueprint(activity_bp)
+    app.register_blueprint(phone_bp)
     # Email services can't send a CSRF token; the webhook checks its own secret
     csrf.exempt("jobtrack.inbound.receive")
 

@@ -14,8 +14,10 @@ the next one needs.
 | Database | Neon Free | $0 (1 GB storage, no card needed) |
 | Sending email (password resets) | Resend Free | $0 (100 emails a day, 3,000 a month) |
 | Receiving email (forwarding addresses) | Cloudflare Email Routing | $0 |
+| Log-in codes by text (optional) | Twilio Verify | about 6 cents per successful code in the US ($0.05 + about $0.008 per text); free trial to start |
 
-About **$7 a month plus the domain**.
+About **$7 a month plus the domain**, plus a few cents per phone log-in
+if you turn on text codes.
 
 Keep a private note open while you work. You'll collect a few values,
 such as the database address and the email API key. Never put them in
@@ -129,6 +131,24 @@ you `hello@yourdomain.com` delivered to your own Gmail.
 The specific `hello@` rule wins over the catch-all, so only other
 addresses (the `gaj-` ones) go to GAJ.
 
+## 7b. Text-message log-in codes (Twilio, optional)
+
+Skip this step and phone log-in is simply hidden on the live site.
+Everything else works without it.
+
+1. Sign up at twilio.com (the free trial needs no card).
+2. In the Console, go to **Verify → Services → Create new**, name it
+   `GAJ`, tick **SMS**, and create it.
+3. Copy three values into Render (**gaj → Environment**):
+   - `TWILIO_ACCOUNT_SID` (on the Console home page, starts with `AC`)
+   - `TWILIO_AUTH_TOKEN` (on the same page; keep it secret)
+   - `TWILIO_VERIFY_SERVICE_SID` (on the Verify service, starts with `VA`)
+4. Trial accounts can only text numbers you've verified in Twilio.
+   Upgrade the account before inviting testers.
+
+GAJ only texts US and Canadian numbers, and limits how many codes one
+number can get. That protects you from bots that rack up texting bills.
+
 ## 8. Test everything on the live site
 
 Use a test account first, then your real one.
@@ -139,6 +159,7 @@ Use a test account first, then your real one.
 - [ ] Inbox: add the address in Gmail as a forwarding address. The confirmation code appears in GAJ's Inbox within a minute
 - [ ] Add an application for a company, then forward one of that company's emails to your address. The status updates
 - [ ] Email `hello@yourdomain.com` from another account. It arrives in your Gmail
+- [ ] If you set up Twilio: Account → add your phone, enter the texted code, log out, then log in with **Phone**
 - [ ] Account: **Download my data** works
 - [ ] Delete the test account
 - [ ] The Privacy and Terms pages show your contact email

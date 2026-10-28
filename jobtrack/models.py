@@ -41,7 +41,10 @@ class RowAccessMixin:
 
 class User(RowAccessMixin, db.Model):
     __tablename__ = "users"
-    __table_args__ = (Index("uq_users_inbound_token", "inbound_token", unique=True),)
+    __table_args__ = (
+        Index("uq_users_inbound_token", "inbound_token", unique=True),
+        Index("uq_users_phone", "phone", unique=True),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(Text, nullable=False)
@@ -50,6 +53,10 @@ class User(RowAccessMixin, db.Model):
     # The secret part of this user's forwarding address: jt-<token>@INBOUND_DOMAIN
     inbound_token: Mapped[str | None] = mapped_column(
         Text, default=new_inbound_token)
+    # Verified mobile number for logging in by text code, "+12155550123".
+    # Only set after the person typed the code we texted, so nobody can
+    # claim someone else's number.
+    phone: Mapped[str | None] = mapped_column(Text)
 
     # cascade="all, delete-orphan": deleting a user deletes everything they own
     applications = relationship("JobApplication", back_populates="user",
@@ -199,3 +206,16 @@ class UserActivity(RowAccessMixin, db.Model):
     day: Mapped[str] = mapped_column(Text, nullable=False)        # "YYYY-MM-DD", the user's local date
     seconds: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     last_ping: Mapped[str | None] = mapped_column(Text)          # UTC "YYYY-MM-DD HH:MM:SS"
+
+
+class PhoneCode(RowAccessMixin, db.Model):
+    """A one-time text-message code, used only when Twilio isn't set up
+    (on your laptop the code is printed in the terminal instead of texted).
+    Stores a hash of the code, never the code itself."""
+    __tablename__ = "phone_codes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    phone: Mapped[str] = mapped_column(Text, nullable=False, index=True)
+    code_hash: Mapped[str] = mapped_column(Text, nullable=False)
+    expires_at: Mapped[str] = mapped_column(Text, nullable=False)   # UTC "YYYY-MM-DD HH:MM:SS"
+    attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
