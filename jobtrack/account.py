@@ -80,7 +80,7 @@ def _rows(model, fields, order_by=None):
 @bp.route("/account/export")
 @login_required
 def export_data():
-    """Download everything JobTrack stores about you, as JSON."""
+    """Download everything GAJ stores about you, as JSON."""
     profile = Profile.query.filter_by(user_id=g.user.id).first()
     profile_fields = ["headline", "phone", "location", "domain", "target_role",
                       "experience_level", "preferred_location", "about"]
@@ -103,7 +103,7 @@ def export_data():
                               JobEmail.received_at),
     }
 
-    filename = f"jobtrack-export-{date.today().isoformat()}.json"
+    filename = f"gaj-export-{date.today().isoformat()}.json"
     return Response(
         json.dumps(data, indent=2, ensure_ascii=False),
         mimetype="application/json",

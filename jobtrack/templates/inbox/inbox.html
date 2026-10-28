@@ -6,13 +6,13 @@
 
 <h1>Inbox</h1>
 <p class="page-subtitle">
-    JobTrack reads job emails, finds the company, works out whether it's a
+    GAJ reads job emails, finds the company, works out whether it's a
     confirmation, interview, offer or rejection, and updates that application.
 </p>
 
 
 <section class="panel" id="forwarding">
-    <h2>Your JobTrack email address</h2>
+    <h2>Your GAJ email address</h2>
     <p class="muted">Forward job emails here and your applications update on their own.
         Keep it private: anyone with this address can send to your Inbox.</p>
 
@@ -45,11 +45,11 @@
                 </div>
             </li>
             <li>Click <strong>Create filter</strong>, tick <strong>Forward it to</strong>, choose your
-                JobTrack address, and click <strong>Create filter</strong>. You'll still get every
+                GAJ address, and click <strong>Create filter</strong>. You'll still get every
                 email in Gmail as usual.</li>
         </ol>
         <p class="muted small">Outlook: Settings → Mail → Rules → Add new rule → "Forward to"
-            your JobTrack address.</p>
+            your GAJ address.</p>
     </details>
 
     <form method="POST" action="{{ url_for('inbound.new_address') }}" class="new-address-form"
@@ -148,7 +148,7 @@
             {% endif %}
 
             <form method="POST" action="{{ url_for('inbox.inbox_delete', email_id=item['id']) }}"
-                  data-confirm="Delete this email from JobTrack? Your application stays as it is.">
+                  data-confirm="Delete this email from GAJ? Your application stays as it is.">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button class="btn btn-small btn-danger" type="submit">Delete</button>
             </form>

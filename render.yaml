@@ -3,7 +3,7 @@
 # when you create the Blueprint. See LAUNCH.md for the full walkthrough.
 services:
   - type: web
-    name: jobtrack
+    name: gaj
     runtime: python
     plan: starter            # always on ($7/month). "free" works for testing but sleeps after 15 min.
     branch: main
@@ -28,7 +28,7 @@ services:
         value: resend
       - key: MAIL_PASSWORD         # your Resend API key
         sync: false
-      - key: MAIL_FROM             # e.g. JobTrack <no-reply@yourdomain.com>
+      - key: MAIL_FROM             # e.g. GAJ <no-reply@yourdomain.com>
         sync: false
       - key: CONTACT_EMAIL
         sync: false

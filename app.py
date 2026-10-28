@@ -1,5 +1,5 @@
 """
-Start JobTrack on your laptop:
+Start GAJ on your laptop:
 
     python app.py
 

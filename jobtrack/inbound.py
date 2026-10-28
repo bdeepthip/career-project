@@ -4,7 +4,7 @@ Incoming email: every user's personal forwarding address.
 Each user has an address like jt-7fk2m9qa4xwd@in.example.com. They set
 Gmail (or Outlook) to forward job emails there. An email service that
 receives mail for that domain posts each email to POST /inbound/email,
-and JobTrack runs it through the same matching as the Inbox.
+and GAJ runs it through the same matching as the Inbox.
 
 Supported senders of the webhook (pick one in production):
   * Cloudflare Email Routing + a small Worker (free): raw email,
@@ -37,6 +37,9 @@ from .models import JobEmail, User, db, new_inbound_token
 bp = Blueprint("inbound", __name__)
 
 MAX_BODY_CHARS = 20000
+# Addresses look like gaj-<token>@domain. "jt-" was the prefix before the
+# app was renamed; still accepted so no forwarding setup ever breaks.
+ADDRESS_PREFIXES = ("gaj-", "jt-")
 GMAIL_CONFIRM_SENDER = "forwarding-noreply@google.com"
 
 
@@ -53,9 +56,10 @@ def find_user(recipients):
             addresses += [address for _, address in getaddresses([header])]
     for address in addresses:
         local, _, addr_domain = address.strip().lower().rpartition("@")
-        if addr_domain != domain or not local.startswith("jt-"):
+        prefix = next((p for p in ADDRESS_PREFIXES if local.startswith(p)), None)
+        if addr_domain != domain or prefix is None:
             continue
-        token = local[3:].split("+", 1)[0]  # allow jt-token+anything@
+        token = local[len(prefix):].split("+", 1)[0]  # allow gaj-token+anything@
         if token:
             user = User.query.filter_by(inbound_token=token).first()
             if user is not None:

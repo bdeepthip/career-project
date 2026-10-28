@@ -1,4 +1,4 @@
-// Small helpers used across JobTrack. Loaded from this file (not written
+// Small helpers used across GAJ. Loaded from this file (not written
 // inside the HTML) so the Content-Security-Policy can block any inline script.
 
 // Any form with data-confirm="..." asks before submitting.

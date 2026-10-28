@@ -11,7 +11,7 @@ Database setup and commands.
 
 A migration is a small versioned script that changes the tables
 (add a table, add a column...). The database remembers which
-migrations it already ran, so every copy of JobTrack, on your laptop
+migrations it already ran, so every copy of GAJ, on your laptop
 or in production, can be brought to the same structure safely.
 """
 
