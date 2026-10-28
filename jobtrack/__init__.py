@@ -2,17 +2,33 @@
 JobTrack application factory.
 
 create_app() builds the Flask app: loads settings, connects the
-database helper, turns on CSRF protection, and registers each
+database, turns on CSRF protection and rate limits, and registers each
 section of the site (a "blueprint" is one section with its routes).
 """
 
+import logging
+
 from flask import Flask, render_template
-from flask_wtf.csrf import CSRFError, CSRFProtect
+from flask_wtf.csrf import CSRFError
+from sqlalchemy import text
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from . import db
-from .config import get_config
+from .config import check_production_settings, get_config
+from .extensions import csrf, limiter
 
-csrf = CSRFProtect()
+# Strict browser rules: only run scripts and styles served by JobTrack
+# itself, so injected HTML can't load or run anything
+CONTENT_SECURITY_POLICY = "; ".join([
+    "default-src 'self'",
+    "script-src 'self'",
+    "style-src 'self'",
+    "img-src 'self' data:",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "object-src 'none'",
+])
 
 
 def create_app(config_class=None):
@@ -24,9 +40,23 @@ def create_app(config_class=None):
             "SECRET_KEY is not set. Add SECRET_KEY=<a long random string> "
             "to your .env file."
         )
+    if app.config.get("PRODUCTION"):
+        problems = check_production_settings(app.config)
+        if problems:
+            raise RuntimeError("Not safe to start in production:\n- " + "\n- ".join(problems))
+
+    if app.config.get("BEHIND_PROXY"):
+        # The host's proxy talks to us over plain HTTP; trust its headers for
+        # the visitor's real IP (rate limits) and https:// (links in emails)
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+
+    if not app.debug and not app.testing:
+        logging.basicConfig(level=logging.INFO,
+                            format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
     db.init_app(app)
     csrf.init_app(app)
+    limiter.init_app(app)
 
     from .auth import bp as auth_bp
     from .applications import bp as applications_bp
@@ -35,6 +65,7 @@ def create_app(config_class=None):
     from .inbox import bp as inbox_bp
     from .account import bp as account_bp
     from .inbound import bp as inbound_bp
+    from .pages import bp as pages_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(applications_bp)
@@ -43,8 +74,27 @@ def create_app(config_class=None):
     app.register_blueprint(inbox_bp)
     app.register_blueprint(account_bp)
     app.register_blueprint(inbound_bp)
+    app.register_blueprint(pages_bp)
     # Email services can't send a CSRF token; the webhook checks its own secret
     csrf.exempt("jobtrack.inbound.receive")
+
+    @app.context_processor
+    def site_settings():
+        return {
+            "contact_email": app.config.get("CONTACT_EMAIL"),
+            "feedback_url": app.config.get("FEEDBACK_URL"),
+        }
+
+    @app.route("/healthz")
+    @limiter.exempt
+    def healthz():
+        """For the host's uptime checks: is the app up and the database reachable?"""
+        try:
+            db.db.session.execute(text("SELECT 1"))
+        except Exception:
+            app.logger.exception("Health check: database unreachable")
+            return {"status": "database unreachable"}, 503
+        return {"status": "ok"}
 
     register_error_pages(app)
     register_security_headers(app)
@@ -65,6 +115,13 @@ def register_error_pages(app):
         return render_template("errors/error.html",
                                title="Too much text",
                                message="That submission is too large. Shorten it and try again."), 413
+
+    @app.errorhandler(429)
+    def too_many_requests(error):
+        return render_template("errors/error.html",
+                               title="Too many attempts",
+                               message="Too many attempts from your connection. "
+                                       "Wait a few minutes and try again."), 429
 
     @app.errorhandler(CSRFError)
     def csrf_failed(error):
@@ -89,4 +146,9 @@ def register_security_headers(app):
         response.headers["X-Content-Type-Options"] = "nosniff"
         # Don't send full page URLs to other sites
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Content-Security-Policy"] = CONTENT_SECURITY_POLICY
+        response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+        if app.config.get("PRODUCTION"):
+            # Browsers remember to use HTTPS only, for a year
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         return response

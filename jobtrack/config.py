@@ -74,6 +74,22 @@ class Config:
     INBOUND_WEBHOOK_SECRET = os.environ.get("INBOUND_WEBHOOK_SECRET", "")
     INBOUND_DAILY_LIMIT = 300  # emails per user per day, so a leaked address can't flood an account
 
+    # Shown on the Privacy and Terms pages and in the footer
+    CONTACT_EMAIL = os.environ.get("CONTACT_EMAIL", "")
+    # Optional link for beta testers to send feedback (e.g. a Google Form)
+    FEEDBACK_URL = os.environ.get("FEEDBACK_URL", "")
+    # Optional: during a private beta, only people with this code can sign up
+    BETA_INVITE_CODE = os.environ.get("BETA_INVITE_CODE", "").strip()
+
+    # Limits on login / sign-up / reset attempts (stops password guessing).
+    # memory:// is right for one server process; set redis://... if you
+    # ever run several servers.
+    RATELIMIT_STORAGE_URI = os.environ.get("RATELIMIT_STORAGE_URI", "memory://")
+    RATELIMIT_HEADERS_ENABLED = True
+
+    PRODUCTION = False
+    BEHIND_PROXY = False  # True when a host (Render) sits in front of the app
+
     DEBUG = False
     TESTING = False
 
@@ -83,7 +99,25 @@ class DevelopmentConfig(Config):
 
 
 class ProductionConfig(Config):
+    PRODUCTION = True
+    BEHIND_PROXY = True
     SESSION_COOKIE_SECURE = True
+    PREFERRED_URL_SCHEME = "https"
+
+
+def check_production_settings(config):
+    """Refuse to start a public server with settings that would lose data
+    or make accounts easy to break into. Returns a list of problems."""
+    problems = []
+    if len(config.get("SECRET_KEY") or "") < 32:
+        problems.append("SECRET_KEY must be at least 32 characters "
+                        "(python -c \"import secrets; print(secrets.token_hex(32))\").")
+    if config["SQLALCHEMY_DATABASE_URI"].startswith("sqlite"):
+        problems.append("DATABASE_URL must point to PostgreSQL. A SQLite file on a "
+                        "hosting server is wiped on every deploy.")
+    if not config.get("MAIL_SERVER"):
+        problems.append("MAIL_SERVER is not set, so password reset emails can't be sent.")
+    return problems
 
 
 class TestConfig(Config):
@@ -92,6 +126,8 @@ class TestConfig(Config):
     WTF_CSRF_ENABLED = False  # individual tests turn this back on
     INBOUND_DOMAIN = "in.jobtrack.test"
     INBOUND_WEBHOOK_SECRET = "test-inbound-secret"
+    RATELIMIT_ENABLED = False  # tests that check limits turn this back on
+    CONTACT_EMAIL = "hello@jobtrack.test"
 
 
 def get_config():
