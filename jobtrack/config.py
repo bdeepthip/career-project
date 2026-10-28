@@ -66,6 +66,14 @@ class Config:
 
     PASSWORD_RESET_MAX_AGE = 60 * 60  # reset links expire after 1 hour
 
+    # Incoming email (each user's forwarding address, jt-xxxx@INBOUND_DOMAIN).
+    # An email service receives mail for INBOUND_DOMAIN and posts each email to
+    # /inbound/email with INBOUND_WEBHOOK_SECRET. Leave the secret empty and
+    # the webhook stays switched off.
+    INBOUND_DOMAIN = os.environ.get("INBOUND_DOMAIN", "inbound.localhost").strip().lower()
+    INBOUND_WEBHOOK_SECRET = os.environ.get("INBOUND_WEBHOOK_SECRET", "")
+    INBOUND_DAILY_LIMIT = 300  # emails per user per day, so a leaked address can't flood an account
+
     DEBUG = False
     TESTING = False
 
@@ -82,6 +90,8 @@ class TestConfig(Config):
     TESTING = True
     SECRET_KEY = "test-secret-key"
     WTF_CSRF_ENABLED = False  # individual tests turn this back on
+    INBOUND_DOMAIN = "in.jobtrack.test"
+    INBOUND_WEBHOOK_SECRET = "test-inbound-secret"
 
 
 def get_config():

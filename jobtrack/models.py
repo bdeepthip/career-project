@@ -10,11 +10,22 @@ Table and column names match the original schema.sql exactly, so an
 existing database.db keeps working without moving any data.
 """
 
+import secrets
+
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import ForeignKey, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 db = SQLAlchemy()
+
+# Lowercase letters and digits only: email addresses are effectively
+# case-insensitive, and this avoids look-alike characters (0/o, 1/l)
+TOKEN_ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789"
+
+
+def new_inbound_token():
+    """14 random characters (~69 bits): impossible to guess, short enough to read."""
+    return "".join(secrets.choice(TOKEN_ALPHABET) for _ in range(14))
 
 
 class RowAccessMixin:
@@ -30,11 +41,15 @@ class RowAccessMixin:
 
 class User(RowAccessMixin, db.Model):
     __tablename__ = "users"
+    __table_args__ = (Index("uq_users_inbound_token", "inbound_token", unique=True),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(Text, nullable=False)
     email: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
     password: Mapped[str] = mapped_column(Text, nullable=False)  # a hash, never plain text
+    # The secret part of this user's forwarding address: jt-<token>@INBOUND_DOMAIN
+    inbound_token: Mapped[str | None] = mapped_column(
+        Text, default=new_inbound_token)
 
     # cascade="all, delete-orphan": deleting a user deletes everything they own
     applications = relationship("JobApplication", back_populates="user",

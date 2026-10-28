@@ -6,14 +6,14 @@ import os
 from datetime import datetime
 
 from flask import (
-    Blueprint, abort, flash, g, redirect, render_template, request, url_for
+    Blueprint, abort, current_app, flash, g, redirect, render_template, request, url_for
 )
 from sqlalchemy import func
 
 from .auth import login_required
 from .email_parser import detect_status, match_application, should_update
 from .gmail_sync import fetch_job_emails
-from .models import JobApplication, JobEmail, db
+from .models import JobApplication, JobEmail, db, new_inbound_token
 from .validation import clean
 
 bp = Blueprint("inbox", __name__)
@@ -32,6 +32,28 @@ def gmail_sync_allowed():
         and g.user is not None
         and g.user.email == owner
     )
+
+
+def inbound_enabled():
+    """True when this server is set up to receive forwarded email."""
+    return bool(current_app.config.get("INBOUND_WEBHOOK_SECRET"))
+
+
+def forwarding_address(user):
+    if not user.inbound_token:  # accounts made before the address existed
+        user.inbound_token = new_inbound_token()
+        db.session.commit()
+    return f"jt-{user.inbound_token}@{current_app.config['INBOUND_DOMAIN']}"
+
+
+# Paste into Gmail's filter "Has the words" box: common applicant-tracking
+# systems plus typical subject lines, so ordinary email isn't forwarded
+GMAIL_FILTER = (
+    'from:(greenhouse.io OR lever.co OR myworkday.com OR workday.com OR icims.com '
+    'OR smartrecruiters.com OR ashbyhq.com OR jobvite.com OR taleo.net OR '
+    'successfactors.com) OR subject:("your application" OR "thank you for applying" '
+    'OR "application received" OR interview OR "next steps" OR offer)'
+)
 
 
 def process_email(user_id, email_data):
@@ -95,6 +117,9 @@ def inbox():
         emails=emails,
         applications=applications,
         gmail_enabled=gmail_sync_allowed(),
+        forwarding_address=forwarding_address(g.user),
+        forwarding_live=inbound_enabled(),
+        gmail_filter=GMAIL_FILTER,
     )
 
 

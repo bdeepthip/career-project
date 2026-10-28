@@ -33,6 +33,7 @@ match a job, and let job emails update your application statuses.
 | Jobs, job details, Match Checker | `jobtrack/jobs.py` |
 | Match Score logic | `jobtrack/matching.py` |
 | Inbox routes | `jobtrack/inbox.py` |
+| Forwarding addresses and the incoming-email webhook | `jobtrack/inbound.py` |
 | Email status detection and matching | `jobtrack/email_parser.py` |
 | Form validation | `jobtrack/validation.py` |
 
@@ -41,6 +42,24 @@ skills in a job description and compares them with your profile.
 Email status detection is rule-based (phrases like "pleased to offer"
 or "not moving forward"), so unusual wording can be missed; the Inbox
 lets you fix a match by hand.
+
+## Forwarding address
+
+Every user gets a private address like `jt-7fk2m9qa4xwd@in.yourdomain.com`
+(shown on the Inbox page). They add a Gmail filter that forwards job
+emails there, and applications update without any pasting.
+
+An email service receives mail for `INBOUND_DOMAIN` and posts each
+message to `POST /inbound/email` with `INBOUND_WEBHOOK_SECRET`. Supported
+formats: raw email (Cloudflare Email Routing with
+`deploy/cloudflare-email-worker.js`, free), Postmark JSON, Mailgun and
+SendGrid form posts. Details:
+
+- Unknown addresses are ignored; each email lands only in its owner's Inbox
+- Retried deliveries are saved once (Message-ID, or a content fingerprint)
+- Gmail's forwarding confirmation code is shown in the Inbox
+- At most 300 forwarded emails per user per day; a user can replace a
+  leaked address in one click, and the old one stops working
 
 ## Security
 
@@ -96,14 +115,14 @@ python -m pytest
 TEST_DATABASE_URL=postgresql://user:pass@localhost/jobtrack_test python -m pytest
 ```
 
-CI runs every test on both SQLite and PostgreSQL. 80 tests cover accounts, password reset, data export and deletion, data privacy between users, CSRF, input
-validation, Match Score, email parsing and the Inbox.
+CI runs every test on both SQLite and PostgreSQL. 101 tests cover accounts, password reset, data export and deletion, data privacy between users, CSRF, input
+validation, Match Score, email parsing, the Inbox and forwarded email.
 
 ## Roadmap
 
 1. Foundation: code structure, CSRF, validation, tests (done)
 2. Accounts: password reset, account deletion, data export (done)
 3. PostgreSQL with migrations (done)
-4. A personal email forwarding address for every user
+4. A personal email forwarding address for every user (done)
 5. Public beta: deployment, domain, privacy policy
 6. Real job listings and a resume builder

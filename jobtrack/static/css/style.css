@@ -149,6 +149,27 @@ h1, h2 { text-wrap: balance; }
 
 .panel h2 { margin-bottom: 6px; }
 
+.copy-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin: 12px 0;
+}
+
+.copy-row input {
+    flex: 1;
+    min-width: 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 14px;
+    background: var(--surface-soft);
+}
+
+.setup-steps { margin: 10px 0 16px; }
+.setup-steps summary { cursor: pointer; font-weight: 600; color: var(--primary); }
+.setup-steps ol { margin: 12px 0 8px 20px; }
+.setup-steps li { margin-bottom: 10px; line-height: 1.5; }
+.new-address-form { margin-top: 4px; }
+
 .notice {
     background: #fffbeb;
     border: 1px solid #fde68a;
