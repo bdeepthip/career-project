@@ -6,9 +6,58 @@
 
 <h1>Inbox</h1>
 <p class="page-subtitle">
-    Paste a job email and JobTrack finds the company, reads whether it's a
+    JobTrack reads job emails, finds the company, works out whether it's a
     confirmation, interview, offer or rejection, and updates that application.
 </p>
+
+
+<section class="panel" id="forwarding">
+    <h2>Your JobTrack email address</h2>
+    <p class="muted">Forward job emails here and your applications update on their own.
+        Keep it private: anyone with this address can send to your Inbox.</p>
+
+    <div class="copy-row">
+        <label class="sr-only" for="forwarding-address">Your forwarding address</label>
+        <input type="text" id="forwarding-address" value="{{ forwarding_address }}" readonly>
+        <button class="btn btn-small" type="button" data-copy="forwarding-address">Copy</button>
+    </div>
+
+    {% if not forwarding_live %}
+        <p class="notice">Forwarding isn't switched on for this server yet, so emails sent
+            here won't arrive. Pasting emails below still works.</p>
+    {% endif %}
+
+    <details class="setup-steps">
+        <summary>Set up automatic forwarding from Gmail (about 3 minutes)</summary>
+        <ol>
+            <li>In Gmail, open <strong>Settings → See all settings → Forwarding and POP/IMAP</strong>,
+                click <strong>Add a forwarding address</strong> and paste the address above.</li>
+            <li>Gmail sends a confirmation code to that address. Refresh this page in a minute:
+                the code appears in your emails below. Enter it in Gmail and click <strong>Verify</strong>.
+                (Leave forwarding itself set to <em>Disable</em>; the filter in the next step
+                forwards only job emails.)</li>
+            <li>Go to <strong>Filters and Blocked Addresses → Create a new filter</strong>. In
+                <strong>Has the words</strong>, paste:
+                <div class="copy-row">
+                    <label class="sr-only" for="gmail-filter">Gmail filter</label>
+                    <input type="text" id="gmail-filter" value="{{ gmail_filter }}" readonly>
+                    <button class="btn btn-small btn-secondary" type="button" data-copy="gmail-filter">Copy</button>
+                </div>
+            </li>
+            <li>Click <strong>Create filter</strong>, tick <strong>Forward it to</strong>, choose your
+                JobTrack address, and click <strong>Create filter</strong>. You'll still get every
+                email in Gmail as usual.</li>
+        </ol>
+        <p class="muted small">Outlook: Settings → Mail → Rules → Add new rule → "Forward to"
+            your JobTrack address.</p>
+    </details>
+
+    <form method="POST" action="{{ url_for('inbound.new_address') }}" class="new-address-form"
+          data-confirm="Get a new address? The current one stops working, and you'll need to update Gmail.">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-small btn-secondary" type="submit">Getting spam? Get a new address</button>
+    </form>
+</section>
 
 
 {% if gmail_enabled %}
@@ -56,6 +105,7 @@
 <h2 class="section-title">Processed emails</h2>
 
 {% for item in emails %}
+    {% set is_setup = "forwarding-noreply@google.com" in (item["sender"] or "") | lower %}
 
     <article class="email-card">
 
@@ -64,9 +114,13 @@
                 <h3>{{ item["subject"] or "(no subject)" }}</h3>
                 <p class="email-meta">{{ item["sender"] or "Unknown sender" }} · {{ item["received_at"] }}</p>
             </div>
-            <span class="status status-{{ (item['detected_status'] or 'unclear') | lower }}">
-                {{ item["detected_status"] or "Unclear" }}
-            </span>
+            {% if is_setup %}
+                <span class="status status-applied">Setup</span>
+            {% else %}
+                <span class="status status-{{ (item['detected_status'] or 'unclear') | lower }}">
+                    {{ item["detected_status"] or "Unclear" }}
+                </span>
+            {% endif %}
         </div>
 
         <p class="email-note">
@@ -78,7 +132,7 @@
 
         <div class="email-actions">
 
-            {% if applications %}
+            {% if applications and not is_setup %}
                 <form method="POST" action="{{ url_for('inbox.inbox_assign', email_id=item['id']) }}"
                       class="assign-form">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

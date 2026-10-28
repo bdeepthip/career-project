@@ -150,6 +150,8 @@ def test_export_contains_own_data_only(client, auth):
     assert response.headers["Content-Disposition"].startswith("attachment;")
     data = json.loads(response.data)
 
+    forwarding = data["account"].pop("forwarding_address")
+    assert forwarding.startswith("jt-") and forwarding.endswith("@in.jobtrack.test")
     assert data["account"] == {"name": "Test User", "email": "test@example.com"}
     assert [a["company"] for a in data["applications"]] == ["MyCo"]
     assert data["skills"] == ["Python"]

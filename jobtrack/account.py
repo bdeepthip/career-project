@@ -11,6 +11,7 @@ from flask import (
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from .auth import login_required, start_session
+from .inbox import forwarding_address
 from .models import (
     Education, Experience, JobApplication, JobEmail, Profile, Skill, User, db
 )
@@ -86,7 +87,8 @@ def export_data():
 
     data = {
         "exported_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "account": {"name": g.user.name, "email": g.user.email},
+        "account": {"name": g.user.name, "email": g.user.email,
+                    "forwarding_address": forwarding_address(g.user)},
         "profile": {f: getattr(profile, f) for f in profile_fields} if profile else None,
         "skills": [s["skill_name"] for s in _rows(Skill, ["skill_name"], Skill.skill_name)],
         "education": _rows(Education, ["institution", "degree", "field_of_study",

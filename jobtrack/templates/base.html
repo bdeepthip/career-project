@@ -75,6 +75,26 @@
             event.preventDefault();
         }
     });
+
+    // Any button with data-copy="<input id>" copies that input's text.
+    document.addEventListener("click", function (event) {
+        var button = event.target.closest("[data-copy]");
+        if (!button) return;
+        var input = document.getElementById(button.dataset.copy);
+        input.select();
+        var done = function () {
+            var label = button.textContent;
+            button.textContent = "Copied";
+            setTimeout(function () { button.textContent = label; }, 1500);
+        };
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(input.value).then(done, function () {
+                document.execCommand("copy"); done();
+            });
+        } else {
+            document.execCommand("copy"); done();
+        }
+    });
 </script>
 
 </body>
