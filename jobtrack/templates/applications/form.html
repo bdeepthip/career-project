@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{# One form for both Add and Edit (was two nearly identical files). #}
+
+{% block title %}{{ "Edit application" if mode == "edit" else "Add application" }}{% endblock %}
+{% block main_class %}form-container{% endblock %}
+
+{% block content %}
+
+<h1>{{ "Edit application" if mode == "edit" else "Add application" }}</h1>
+
+<form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="form-group">
+        <label for="company">Company</label>
+        <input type="text" id="company" name="company" value="{{ application['company'] or '' }}"
+               placeholder="Example: Google" maxlength="120" required>
+    </div>
+
+    <div class="form-group">
+        <label for="job_title">Job title</label>
+        <input type="text" id="job_title" name="job_title" value="{{ application['job_title'] or '' }}"
+               placeholder="Example: Software Engineer" maxlength="120" required>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label for="location">Location</label>
+            <input type="text" id="location" name="location" value="{{ application['location'] or '' }}"
+                   placeholder="Example: New York, NY" maxlength="120">
+        </div>
+
+        <div class="form-group">
+            <label for="date_applied">Date applied</label>
+            <input type="date" id="date_applied" name="date_applied"
+                   value="{{ application['date_applied'] or '' }}" required>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="job_url">Job URL</label>
+        <input type="url" id="job_url" name="job_url" value="{{ application['job_url'] or '' }}"
+               placeholder="https://...">
+    </div>
+
+    <div class="form-group">
+        <label for="status">Status</label>
+        <select id="status" name="status">
+            {% for status in statuses %}
+                <option value="{{ status }}" {{ 'selected' if application['status'] == status }}>{{ status }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="notes">Notes</label>
+        <textarea id="notes" name="notes"
+                  placeholder="Interview details, recruiter name, follow-up date...">{{ application['notes'] or '' }}</textarea>
+    </div>
+
+    <div class="form-actions">
+        <button class="btn" type="submit">
+            {{ "Save changes" if mode == "edit" else "Save application" }}
+        </button>
+        <a class="btn btn-secondary" href="{{ url_for('applications.dashboard') }}">Cancel</a>
+    </div>
+</form>
+
+{% endblock %}

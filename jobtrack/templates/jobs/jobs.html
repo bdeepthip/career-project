@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Jobs{% endblock %}
+
+{% block content %}
+
+<h1>Find jobs</h1>
+<p class="page-subtitle">Search opportunities and see how your skills match.</p>
+
+<div class="notice">
+    These are <strong>sample listings</strong> for trying out Match Score. Real job listings are coming soon.
+    To check a real job, paste its description into the
+    <a href="{{ url_for('jobs.match_checker') }}">Match Checker</a>.
+</div>
+
+{% if not has_skills %}
+    <div class="notice">
+        Add your skills on your <a href="{{ url_for('profile.profile') }}#skills">profile</a>
+        to see match scores.
+    </div>
+{% endif %}
+
+
+<form method="GET" action="{{ url_for('jobs.jobs') }}" class="job-search-form">
+
+    <label class="sr-only" for="search">Search</label>
+    <input type="text" id="search" name="search" placeholder="Job title, company or skill..." value="{{ search }}">
+
+    <label class="sr-only" for="domain">Domain</label>
+    <select id="domain" name="domain">
+        <option value="">All domains</option>
+        {% for d in domains %}
+            <option value="{{ d }}" {{ 'selected' if domain == d }}>{{ d }}</option>
+        {% endfor %}
+    </select>
+
+    <label class="sr-only" for="location">Location</label>
+    <input type="text" id="location" name="location" placeholder="Location..." value="{{ location }}">
+
+    <button class="btn" type="submit">Search</button>
+    <a href="{{ url_for('jobs.jobs') }}" class="btn btn-secondary">Clear</a>
+</form>
+
+
+<div class="jobs-grid">
+
+    {% for job in jobs %}
+        {% set level = "high" if job["match_score"] >= 70 else ("medium" if job["match_score"] >= 40 else "low") %}
+
+        <article class="job-card">
+
+            <div class="job-card-top">
+                <div>
+                    <h2>{{ job["title"] }}</h2>
+                    <h3>{{ job["company"] }}</h3>
+                </div>
+                <div class="badges">
+                    <span class="job-domain">{{ job["domain"] }}</span>
+                    {% if has_skills %}
+                        <span class="match-badge {{ level }}">{{ job["match_score"] }}% match</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="job-meta">
+                <span>{{ job["location"] }}</span>
+                <span>{{ job["experience_level"] }}</span>
+                <span>Posted {{ job["posted_date"] }}</span>
+            </div>
+
+            <p class="job-skills"><strong>Skills:</strong> {{ job["required_skills"] }}</p>
+            <p class="job-description">{{ job["description"] }}</p>
+
+            <a href="{{ url_for('jobs.job_details', job_id=job['id']) }}" class="btn">View job</a>
+
+        </article>
+
+    {% else %}
+
+        <div class="empty-state">
+            <h2>No jobs found</h2>
+            <p>Try changing your search or filters.</p>
+            <a href="{{ url_for('jobs.jobs') }}" class="btn">View all jobs</a>
+        </div>
+
+    {% endfor %}
+
+</div>
+
+{% endblock %}

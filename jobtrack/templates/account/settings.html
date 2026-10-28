@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Account{% endblock %}
+{% block main_class %}profile-page{% endblock %}
+
+{% block content %}
+
+<h1 class="page-title">Account</h1>
+<p class="page-subtitle">Signed in as <strong>{{ g.user["email"] }}</strong></p>
+
+
+<section class="panel">
+    <h2>Name</h2>
+    <form method="POST" action="{{ url_for('account.change_name') }}" class="inline-add">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label class="sr-only" for="name">Name</label>
+        <input type="text" id="name" name="name" value="{{ g.user['name'] }}"
+               maxlength="100" autocomplete="name" required>
+        <button class="btn" type="submit">Save</button>
+    </form>
+</section>
+
+
+<section class="panel">
+    <h2>Change password</h2>
+    <p class="muted">Changing your password signs you out on all other devices.</p>
+
+    <form method="POST" action="{{ url_for('account.change_password') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-group">
+            <label for="current_password">Current password</label>
+            <input type="password" id="current_password" name="current_password"
+                   autocomplete="current-password" required>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="new_password">New password</label>
+                <input type="password" id="new_password" name="new_password" minlength="8"
+                       placeholder="At least 8 characters" autocomplete="new-password" required>
+            </div>
+            <div class="form-group">
+                <label for="confirm_password">Confirm new password</label>
+                <input type="password" id="confirm_password" name="confirm_password" minlength="8"
+                       autocomplete="new-password" required>
+            </div>
+        </div>
+
+        <button class="btn" type="submit">Change password</button>
+    </form>
+</section>
+
+
+<section class="panel">
+    <h2>Download your data</h2>
+    <p class="muted">
+        A JSON file with your profile, skills, education, experience,
+        applications and inbox emails.
+    </p>
+    <a class="btn btn-secondary" href="{{ url_for('account.export_data') }}">Download my data</a>
+</section>
+
+
+<section class="panel danger-zone" id="delete">
+    <h2>Delete account</h2>
+    <p>
+        Permanently deletes your account and everything in it: applications,
+        profile, skills, education, experience and inbox emails.
+        <strong>This can't be undone.</strong> Download your data first if you want a copy.
+    </p>
+
+    <form method="POST" action="{{ url_for('account.delete_account') }}"
+          data-confirm="Permanently delete your account and all your data? This can't be undone.">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-group">
+            <label for="delete_password">Enter your password to confirm</label>
+            <input type="password" id="delete_password" name="password"
+                   autocomplete="current-password" required>
+        </div>
+
+        <button class="btn btn-danger" type="submit">Delete my account</button>
+    </form>
+</section>
+
+{% endblock %}

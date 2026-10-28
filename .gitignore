@@ -1,0 +1,15 @@
+# Secrets and local data: never commit these
+.env
+database.db
+*.db
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+.pytest_cache/
+
+# Editors / OS
+.vscode/
+.DS_Store

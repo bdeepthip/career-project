@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Privacy Policy{% endblock %}
+
+{% block content %}
+<article class="legal-page">
+
+<h1>Privacy Policy</h1>
+<p class="muted">Last updated {{ last_updated }}</p>
+
+<p>JobTrack helps you keep track of your job applications. This page explains, in plain
+language, what we store, why, and what control you have over it.</p>
+
+<h2>What we store</h2>
+<ul>
+    <li><strong>Your account:</strong> name, email address, and your password as a salted hash
+        (we never see or store the password itself).</li>
+    <li><strong>What you enter:</strong> job applications, notes, your profile (headline, phone,
+        location, about), skills, education and experience.</li>
+    <li><strong>Emails you send to JobTrack:</strong> emails you paste into the Inbox or forward to
+        your JobTrack address: sender, subject and text. Attachments are not stored.</li>
+    <li><strong>A session cookie</strong> that keeps you logged in. We don't use advertising or
+        tracking cookies.</li>
+    <li><strong>Server logs</strong> (IP address, pages requested, time), kept briefly to keep the
+        service running and to block abuse such as password guessing.</li>
+</ul>
+
+<h2>Your email account</h2>
+<p>JobTrack never signs in to your Gmail or Outlook account and cannot read your mailbox.
+It only receives the emails you choose to forward to your JobTrack address (for example,
+with a Gmail filter). You can stop at any time by removing the filter or forwarding address
+in your email settings, or by getting a new JobTrack address on the Inbox page.</p>
+
+<h2>How we use it</h2>
+<p>Only to run JobTrack for you: showing your applications, working out Match Scores, and
+updating application statuses from emails. We don't sell your data, share it with
+advertisers or recruiters, or use it for advertising.</p>
+
+<h2>Who else handles it</h2>
+<p>Like most websites, JobTrack runs on outside providers: a hosting company that runs the
+app, a database provider that stores your data, an email service that sends password reset
+emails, and an email service that receives forwarded emails. They process data only to
+provide those services to JobTrack. Data is sent over encrypted (HTTPS) connections.</p>
+
+<h2>Your choices</h2>
+<ul>
+    <li><strong>Download everything:</strong> Account → Download my data gives you a JSON file of
+        everything JobTrack stores about you.</li>
+    <li><strong>Delete everything:</strong> Account → Delete my account permanently removes your
+        account and all your data. It may remain in encrypted backups for a short time until
+        they are replaced.</li>
+    <li><strong>Correct it:</strong> you can edit or delete any application, profile entry or
+        email at any time.</li>
+</ul>
+
+<h2>Beta</h2>
+<p>JobTrack is in beta and run by an individual developer. We take reasonable measures to
+protect your data (hashed passwords, encrypted connections, access limited to your own
+account), but no online service can promise perfect security. Please don't store
+information you would not want to risk, such as government ID numbers or bank details.</p>
+
+<h2>Age</h2>
+<p>JobTrack is not intended for anyone under 16.</p>
+
+<h2>Changes</h2>
+<p>If this policy changes in a way that matters, we'll update the date above and tell
+account holders by email.</p>
+
+<h2>Contact</h2>
+<p>{% if contact_email %}Questions or requests: <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>.
+{% else %}Questions or requests: use the contact link in the footer.{% endif %}</p>
+
+</article>
+{% endblock %}

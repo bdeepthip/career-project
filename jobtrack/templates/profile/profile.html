@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block title %}Profile{% endblock %}
+{% block main_class %}profile-page{% endblock %}
+
+{% block content %}
+
+<!-- PROFESSIONAL PROFILE -->
+
+<section class="panel">
+
+    <h1>Professional profile</h1>
+    <p class="page-subtitle">Your career goals, used to personalize jobs and match scores.</p>
+
+    <form method="POST" action="{{ url_for('profile.profile') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-group">
+            <label for="headline">Professional headline</label>
+            <input type="text" id="headline" name="headline" maxlength="150"
+                   placeholder="Example: Python Backend Developer"
+                   value="{{ profile['headline'] if profile and profile['headline'] else '' }}">
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="phone">Phone</label>
+                <input type="tel" id="phone" name="phone" maxlength="30" autocomplete="tel"
+                       value="{{ profile['phone'] if profile and profile['phone'] else '' }}">
+            </div>
+            <div class="form-group">
+                <label for="location">Current location</label>
+                <input type="text" id="location" name="location" maxlength="150"
+                       placeholder="Example: Philadelphia, PA"
+                       value="{{ profile['location'] if profile and profile['location'] else '' }}">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="domain">Career domain</label>
+                <select id="domain" name="domain">
+                    <option value="">Select domain</option>
+                    {% for d in domains %}
+                        <option value="{{ d }}" {{ 'selected' if profile and profile['domain'] == d }}>{{ d }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="experience_level">Experience level</label>
+                <select id="experience_level" name="experience_level">
+                    <option value="">Select level</option>
+                    {% for level in experience_levels %}
+                        <option value="{{ level }}" {{ 'selected' if profile and profile['experience_level'] == level }}>{{ level }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="target_role">Target job role</label>
+                <input type="text" id="target_role" name="target_role" maxlength="150"
+                       placeholder="Example: Data Engineer"
+                       value="{{ profile['target_role'] if profile and profile['target_role'] else '' }}">
+            </div>
+            <div class="form-group">
+                <label for="preferred_location">Preferred job location</label>
+                <input type="text" id="preferred_location" name="preferred_location" maxlength="150"
+                       placeholder="Example: Remote / Philadelphia"
+                       value="{{ profile['preferred_location'] if profile and profile['preferred_location'] else '' }}">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="about">About me</label>
+            <textarea id="about" name="about" maxlength="2000"
+                      placeholder="A short professional summary...">{{ profile['about'] if profile and profile['about'] else '' }}</textarea>
+        </div>
+
+        <button class="btn" type="submit">Save profile</button>
+    </form>
+
+</section>
+
+
+<!-- SKILLS -->
+
+<section class="panel" id="skills">
+
+    <h2>Skills</h2>
+    <p class="page-subtitle">Your Match Score compares these with each job. Add several at once with commas.</p>
+
+    <form method="POST" action="{{ url_for('profile.add_skill') }}" class="inline-add">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label class="sr-only" for="skill_name">Add skills</label>
+        <input type="text" id="skill_name" name="skill_name" placeholder="Example: Python, SQL, Git" required>
+        <button class="btn" type="submit">Add</button>
+    </form>
+
+    {% if skills %}
+        <div class="skills-list">
+            {% for skill in skills %}
+                <div class="skill-item">
+                    <span>{{ skill["skill_name"] }}</span>
+                    <form method="POST" action="{{ url_for('profile.delete_skill', skill_id=skill['id']) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="skill-delete" aria-label="Remove {{ skill['skill_name'] }}">×</button>
+                    </form>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="muted">No skills added yet.</p>
+    {% endif %}
+
+</section>
+
+
+<!-- EDUCATION -->
+
+<section class="panel" id="education">
+
+    <h2>Education</h2>
+
+    {% for item in education %}
+        <div class="profile-entry">
+            <div>
+                <h3>{{ item["degree"] }}</h3>
+                <p><strong>{{ item["institution"] }}</strong></p>
+                {% if item["field_of_study"] %}<p>{{ item["field_of_study"] }}</p>{% endif %}
+                {% if item["start_year"] or item["end_year"] %}
+                    <p>{{ item["start_year"] or "" }}{% if item["start_year"] and item["end_year"] %} – {% endif %}{{ item["end_year"] or "" }}</p>
+                {% endif %}
+            </div>
+            <form method="POST" action="{{ url_for('profile.delete_education', education_id=item['id']) }}"
+                  data-confirm="Delete this education entry?">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-small btn-danger" type="submit">Delete</button>
+            </form>
+        </div>
+    {% else %}
+        <p class="muted">No education added yet.</p>
+    {% endfor %}
+
+    <details class="add-section">
+        <summary>+ Add education</summary>
+
+        <form method="POST" action="{{ url_for('profile.add_education') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="institution">Institution</label>
+                    <input type="text" id="institution" name="institution" maxlength="150"
+                           placeholder="Example: Temple University" required>
+                </div>
+                <div class="form-group">
+                    <label for="degree">Degree</label>
+                    <input type="text" id="degree" name="degree" maxlength="150"
+                           placeholder="Example: Master of Science" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="field_of_study">Field of study</label>
+                <input type="text" id="field_of_study" name="field_of_study" maxlength="150"
+                       placeholder="Example: Computer Science">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="start_year">Start year</label>
+                    <input type="number" id="start_year" name="start_year" min="1950" max="2100" placeholder="2025">
+                </div>
+                <div class="form-group">
+                    <label for="end_year">End year</label>
+                    <input type="number" id="end_year" name="end_year" min="1950" max="2100" placeholder="2027">
+                </div>
+            </div>
+
+            <button class="btn" type="submit">Save education</button>
+        </form>
+    </details>
+
+</section>
+
+
+<!-- EXPERIENCE -->
+
+<section class="panel" id="experience">
+
+    <h2>Work experience</h2>
+
+    {% for item in experience %}
+        <div class="profile-entry">
+            <div>
+                <h3>{{ item["job_title"] }}</h3>
+                <p><strong>{{ item["company"] }}</strong></p>
+                {% if item["location"] %}<p>{{ item["location"] }}</p>{% endif %}
+                {% if item["start_date"] or item["end_date"] %}
+                    <p>{{ item["start_date"] or "" }} – {{ item["end_date"] or "Present" }}</p>
+                {% endif %}
+                {% if item["description"] %}<p>{{ item["description"] }}</p>{% endif %}
+            </div>
+            <form method="POST" action="{{ url_for('profile.delete_experience', experience_id=item['id']) }}"
+                  data-confirm="Delete this experience entry?">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-small btn-danger" type="submit">Delete</button>
+            </form>
+        </div>
+    {% else %}
+        <p class="muted">No work experience added yet.</p>
+    {% endfor %}
+
+    <details class="add-section">
+        <summary>+ Add experience</summary>
+
+        <form method="POST" action="{{ url_for('profile.add_experience') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="exp_company">Company</label>
+                    <input type="text" id="exp_company" name="company" maxlength="150" required>
+                </div>
+                <div class="form-group">
+                    <label for="exp_title">Job title</label>
+                    <input type="text" id="exp_title" name="job_title" maxlength="150" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="exp_location">Location</label>
+                <input type="text" id="exp_location" name="location" maxlength="150">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="start_date">Start date</label>
+                    <input type="month" id="start_date" name="start_date">
+                </div>
+                <div class="form-group">
+                    <label for="end_date">End date (leave empty if current)</label>
+                    <input type="month" id="end_date" name="end_date">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" maxlength="3000"
+                          placeholder="Responsibilities, technologies, achievements..."></textarea>
+            </div>
+
+            <button class="btn" type="submit">Save experience</button>
+        </form>
+    </details>
+
+</section>
+
+{% endblock %}

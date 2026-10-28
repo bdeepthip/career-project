@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Match Checker{% endblock %}
+
+{% block content %}
+
+<h1>Match Checker</h1>
+<p class="page-subtitle">Paste any job description to see how your profile skills match.</p>
+
+<form method="POST" class="panel">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label class="sr-only" for="job_description">Job description</label>
+    <textarea id="job_description" name="job_description" class="tall"
+              placeholder="Paste the full job description here..." required>{{ job_description }}</textarea>
+
+    <button class="btn" type="submit">Check match</button>
+</form>
+
+
+{% if result %}
+
+    {% if not result.found_any %}
+
+        <div class="notice">
+            No known skills were found in this description. Paste the full posting,
+            including the requirements section.
+        </div>
+
+    {% else %}
+
+        {% with match_score=result.match_score, matched=result.matched, missing=result.missing,
+                learning_plan=result.learning_plan, total_hours=result.total_hours %}
+            {% include "jobs/_match_box.html" %}
+        {% endwith %}
+
+        <p class="muted small">
+            Match Score is keyword-based: it checks the job description for
+            over 40 common technical skills and compares them with your profile.
+        </p>
+
+    {% endif %}
+
+{% endif %}
+
+{% endblock %}
