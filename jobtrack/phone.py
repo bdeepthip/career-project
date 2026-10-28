@@ -14,7 +14,7 @@ from flask import (
 from sqlalchemy.exc import IntegrityError
 
 from .auth import login_required, safe_next, start_session
-from .extensions import limiter
+from .extensions import limiter, user_key
 from .models import User, db
 from .sms import (
     SmsError, check_code, display_phone, masked_phone, normalize_phone, send_code, sms_enabled
@@ -101,7 +101,7 @@ def login_phone_code():
 
 @bp.route("/account/phone", methods=["POST"])
 @login_required
-@limiter.limit("5 per hour", key_func=lambda: f"user:{g.user.id}")
+@limiter.limit("5 per hour", key_func=user_key)
 def add_phone():
     phone = normalize_phone(request.form.get("phone"))
     if phone is None:
@@ -126,7 +126,7 @@ def add_phone():
 
 @bp.route("/account/phone/verify", methods=["GET", "POST"])
 @login_required
-@limiter.limit("10 per 15 minutes", methods=["POST"], key_func=lambda: f"user:{g.user.id}")
+@limiter.limit("10 per 15 minutes", methods=["POST"], key_func=user_key)
 def verify_phone():
     phone = session.get("pending_phone")
     if not phone:

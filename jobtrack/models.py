@@ -219,3 +219,55 @@ class PhoneCode(RowAccessMixin, db.Model):
     code_hash: Mapped[str] = mapped_column(Text, nullable=False)
     expires_at: Mapped[str] = mapped_column(Text, nullable=False)   # UTC "YYYY-MM-DD HH:MM:SS"
     attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+
+class Message(RowAccessMixin, db.Model):
+    """A direct message between two GAJ users."""
+    __tablename__ = "messages"
+    __table_args__ = (
+        Index("idx_messages_pair", "sender_id", "recipient_id"),
+        Index("idx_messages_unread", "recipient_id", "read_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    sender_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    recipient_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[str] = mapped_column(Text, nullable=False)   # "YYYY-MM-DD HH:MM:SS"
+    read_at: Mapped[str | None] = mapped_column(Text)
+
+
+class Block(RowAccessMixin, db.Model):
+    """blocker_id doesn't want messages from blocked_id."""
+    __tablename__ = "blocks"
+    __table_args__ = (UniqueConstraint("blocker_id", "blocked_id", name="uq_block_pair"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    blocker_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    blocked_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    created_at: Mapped[str] = mapped_column(Text, nullable=False)
+
+
+class Report(RowAccessMixin, db.Model):
+    """A user reported another user's messages, for the GAJ team to review."""
+    __tablename__ = "reports"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    reporter_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    reported_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    reason: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[str] = mapped_column(Text, nullable=False)
+
+
+class Notification(RowAccessMixin, db.Model):
+    """Something the user should know about: a message, a status change..."""
+    __tablename__ = "notifications"
+    __table_args__ = (Index("idx_notifications_user", "user_id", "read_at"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    kind: Mapped[str] = mapped_column(Text, nullable=False)       # message, status, inbox, goal, ...
+    text: Mapped[str] = mapped_column(Text, nullable=False)
+    link: Mapped[str | None] = mapped_column(Text)                # a GAJ path, e.g. /messages/4
+    created_at: Mapped[str] = mapped_column(Text, nullable=False)
+    read_at: Mapped[str | None] = mapped_column(Text)

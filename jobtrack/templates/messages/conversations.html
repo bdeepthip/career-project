@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}Messages{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Messages</h1>
+</div>
+
+<section class="panel compose">
+    <h2>New message</h2>
+    <p class="muted small">Message anyone on GAJ by their account email: a friend for a referral,
+        a classmate who's also searching.</p>
+    <form method="POST" action="{{ url_for('messages.new_conversation') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-group">
+            <label for="to">To (their GAJ email)</label>
+            <input type="email" id="to" name="email" value="{{ to }}" placeholder="friend@example.com"
+                   autocomplete="off" required>
+        </div>
+        <div class="form-group">
+            <label for="first-message">Message</label>
+            <textarea id="first-message" name="body" maxlength="2000" rows="3" required
+                      placeholder="Hi! Are you still applying for data roles?"></textarea>
+        </div>
+        <button class="btn" type="submit">Send</button>
+    </form>
+</section>
+
+{% if rows %}
+    <ul class="conversation-list">
+        {% for row in rows %}
+            {% set other = row.user %}
+            {% set last = row.last %}
+            <li>
+                <a class="conversation{{ ' is-unread' if row.unread }}" href="{{ url_for('messages.thread', user_id=other.id) }}">
+                    <span class="person-avatar" aria-hidden="true">{{ (other.name.split() | map("first") | join)[:2] | upper }}</span>
+                    <span class="conversation-text">
+                        <span class="conversation-top">
+                            <strong>{{ other.name }}</strong>
+                            <span class="conversation-time">{{ last.created_at | time_ago_utc }}</span>
+                        </span>
+                        <span class="conversation-preview">
+                            {% if last.sender_id == g.user.id %}You: {% endif %}{{ last.body | truncate(90) }}
+                        </span>
+                    </span>
+                    {% if row.unread %}<span class="nav-badge">{{ row.unread }}<span class="sr-only"> unread</span></span>{% endif %}
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <div class="empty-state">
+        <h2>No conversations yet</h2>
+        <p>Start one above. Job hunting goes faster with people in your corner.</p>
+    </div>
+{% endif %}
+{% endblock %}

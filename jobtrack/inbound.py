@@ -203,7 +203,7 @@ def receive():
     if GMAIL_CONFIRM_SENDER in email_data["sender"].lower():
         saved = save_gmail_confirmation(user.id, email_data)
     else:
-        saved = process_email(user.id, email_data) is not None
+        saved = process_email(user.id, email_data, notify_user=True) is not None
     db.session.commit()
 
     return jsonify(status="processed" if saved else "duplicate")
@@ -218,6 +218,8 @@ def save_gmail_confirmation(user_id, email_data):
     note = (f"Gmail forwarding confirmation code: {code.group(1)}. Enter it in Gmail settings "
             "to finish setting up forwarding." if code else
             "Gmail sent a forwarding confirmation. Open Gmail settings to finish setup.")
+    from .notifications import notify
+    notify(user_id, "inbox", note, link=url_for("inbox.inbox"))
     db.session.add(JobEmail(
         user_id=user_id, message_id=email_data["message_id"],
         sender=email_data["sender"], subject=email_data["subject"], body=email_data["body"],

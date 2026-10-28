@@ -48,3 +48,18 @@ def time_ago(value, now=None):
         weeks = days // 7
         return f"{weeks} week{'s' if weeks != 1 else ''} ago"
     return when.strftime("%b %-d, %Y") if when.year != now.year else when.strftime("%b %-d")
+
+
+def time_ago_utc(value, now=None):
+    """For times GAJ stored in UTC (messages, notifications): compare in the
+    viewer's own time zone, so 'yesterday' means their yesterday."""
+    from datetime import timedelta, timezone
+    from flask import has_request_context, session
+
+    when = _parse(value)
+    if when is None:
+        return value or ""
+    offset = timedelta(minutes=session.get("tz_offset_minutes", 0)) if has_request_context() else timedelta(0)
+    now = now or datetime.now(timezone.utc).replace(tzinfo=None)
+    local_when = (when - offset).strftime("%Y-%m-%d %H:%M:%S")
+    return time_ago(local_when, now - offset)

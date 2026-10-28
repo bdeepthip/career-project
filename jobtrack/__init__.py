@@ -68,6 +68,8 @@ def create_app(config_class=None):
     from .pages import bp as pages_bp
     from .activity import bp as activity_bp
     from .phone import bp as phone_bp
+    from .messages import bp as messages_bp
+    from .notifications import bp as notifications_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(applications_bp)
@@ -79,6 +81,8 @@ def create_app(config_class=None):
     app.register_blueprint(pages_bp)
     app.register_blueprint(activity_bp)
     app.register_blueprint(phone_bp)
+    app.register_blueprint(messages_bp)
+    app.register_blueprint(notifications_bp)
     # Email services can't send a CSRF token; the webhook checks its own secret
     csrf.exempt("jobtrack.inbound.receive")
 
@@ -91,8 +95,9 @@ def create_app(config_class=None):
             "daily_line": line_for(),
         }
 
-    from .timefmt import month_label, time_ago
+    from .timefmt import month_label, time_ago, time_ago_utc
     app.add_template_filter(time_ago, "time_ago")
+    app.add_template_filter(time_ago_utc, "time_ago_utc")
     app.add_template_filter(month_label, "month_label")
 
     @app.route("/healthz")

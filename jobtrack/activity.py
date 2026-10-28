@@ -71,8 +71,13 @@ def ping():
     last = (datetime.strptime(row.last_ping, TIME_FORMAT).replace(tzinfo=timezone.utc)
             if row.last_ping else None)
     if last is None or now - last >= MIN_GAP:
+        before = row.seconds
         row.seconds = min(row.seconds + PING_SECONDS, 24 * 60 * 60)
         row.last_ping = now.strftime(TIME_FORMAT)
+        if before < DAILY_GOAL_SECONDS <= row.seconds:
+            from .notifications import notify
+            notify(g.user.id, "goal", "You put in 7 hours on GAJ today. That's a full working day. "
+                                      "Rest well; tomorrow counts too.")
     db.session.commit()
 
     return jsonify(seconds=row.seconds, display=format_duration(row.seconds),

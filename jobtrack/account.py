@@ -8,12 +8,14 @@ from datetime import date, datetime, timezone
 from flask import (
     Blueprint, Response, flash, g, redirect, render_template, request, session, url_for
 )
+from sqlalchemy import or_
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from .auth import login_required, start_session
 from .inbox import forwarding_address
 from .models import (
-    Education, Experience, JobApplication, JobEmail, Profile, Skill, User, UserActivity, db
+    Block, Education, Experience, JobApplication, JobEmail, Message, Notification, Profile,
+    Report, Skill, User, UserActivity, db
 )
 from .validation import MIN_PASSWORD_LENGTH, clean
 
@@ -21,7 +23,8 @@ bp = Blueprint("account", __name__)
 
 # Every table that holds a user's data, in the order to delete them
 # (rows that point at other rows go first)
-USER_MODELS = [JobEmail, JobApplication, Skill, Education, Experience, Profile, UserActivity]
+USER_MODELS = [JobEmail, JobApplication, Skill, Education, Experience, Profile, UserActivity,
+               Notification]
 
 
 @bp.route("/account")
@@ -102,6 +105,16 @@ def export_data():
                                          "detected_status", "application_id", "update_note"],
                               JobEmail.received_at),
         "screen_time": _rows(UserActivity, ["day", "seconds"], UserActivity.day),
+        "messages": [
+            {"from": "me" if m.sender_id == g.user.id else f"user {m.sender_id}",
+             "to": "me" if m.recipient_id == g.user.id else f"user {m.recipient_id}",
+             "body": m.body, "sent_at_utc": m.created_at}
+            for m in Message.query.filter(or_(Message.sender_id == g.user.id,
+                                              Message.recipient_id == g.user.id))
+                                  .order_by(Message.created_at)
+        ],
+        "notifications": _rows(Notification, ["kind", "text", "created_at", "read_at"],
+                               Notification.created_at),
     }
 
     filename = f"gaj-export-{date.today().isoformat()}.json"
@@ -126,6 +139,12 @@ def delete_account():
     # One transaction: either everything is deleted, or nothing is
     for model in USER_MODELS:
         model.query.filter_by(user_id=uid).delete()
+    # Conversations, blocks and reports involving this person, in both directions
+    Message.query.filter(or_(Message.sender_id == uid, Message.recipient_id == uid)).delete()
+    Block.query.filter(or_(Block.blocker_id == uid, Block.blocked_id == uid)).delete()
+    Report.query.filter(or_(Report.reporter_id == uid, Report.reported_id == uid)).delete()
+    # Other people's "new message from ..." notifications about this person
+    Notification.query.filter(Notification.link == url_for("messages.thread", user_id=uid)).delete()
     User.query.filter_by(id=uid).delete()
     db.session.commit()
 

@@ -56,7 +56,7 @@ GMAIL_FILTER = (
 )
 
 
-def process_email(user_id, email_data):
+def process_email(user_id, email_data, notify_user=False):
     """Save one email, match it to an application, and update that
     application's status if the email moves it forward.
 
@@ -83,6 +83,14 @@ def process_email(user_id, email_data):
     elif should_update(application.status, detected):
         note = f"Status changed: {application.status} -> {detected}"
         application.status = detected
+        if notify_user:   # forwarded email: the person wasn't watching, tell them
+            from .notifications import notify
+            headline = {"Offer": "Offer from", "Interview": "Interview with",
+                        "Rejected": "Update from"}.get(detected, "Update from")
+            notify(user_id, "status",
+                   f"{headline} {application.company}: your {application.job_title} "
+                   f"application is now {detected}.",
+                   link=url_for("inbox.inbox"))
     else:
         note = f"No change (already {application.status})"
 

@@ -101,3 +101,33 @@ document.addEventListener("keydown", function (event) {
 
     setInterval(ping, 30 * 1000);
 })();
+
+
+// ---------- Open conversation: show new messages without reloading ----------
+
+(function () {
+    var thread = document.querySelector("[data-thread]");
+    if (!thread) return;
+
+    var latest = document.getElementById("latest");
+    if (latest) latest.scrollIntoView({ block: "end" });
+
+    setInterval(function () {
+        if (document.visibilityState !== "visible") return;
+        var current = document.querySelector("[data-thread]");
+        fetch(current.dataset.latestUrl, { credentials: "same-origin" })
+            .then(function (response) { return response.ok ? response.text() : null; })
+            .then(function (html) {
+                if (!html) return;
+                var holder = document.createElement("div");
+                holder.innerHTML = html;   // our own server-rendered, auto-escaped HTML
+                var fresh = holder.querySelector("[data-thread]");
+                if (fresh && fresh.dataset.count !== current.dataset.count) {
+                    current.replaceWith(fresh);
+                    var last = document.getElementById("latest");
+                    if (last) last.scrollIntoView({ block: "end", behavior: "smooth" });
+                }
+            })
+            .catch(function () { /* offline: try again next time */ });
+    }, 8000);
+})();

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Notifications</h1>
+    {% if unread_notifications %}
+        <form method="POST" action="{{ url_for('notifications.mark_all_read') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-quiet" type="submit">Mark all as read</button>
+        </form>
+    {% endif %}
+</div>
+
+{% set icons = {"message": "messages", "status": "dashboard", "inbox": "inbox", "goal": "clock"} %}
+
+{% if items %}
+    <ul class="note-list">
+        {% for note in items %}
+            <li>
+                <form method="POST" action="{{ url_for('notifications.open_notification', note_id=note.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="note{{ ' is-unread' if not note.read_at }}">
+                        <span class="note-icon note-{{ note.kind }}">{{ icon(icons.get(note.kind, "notifications")) }}</span>
+                        <span class="note-text">{{ note.text }}</span>
+                        <span class="note-time">{{ note.created_at | time_ago_utc }}</span>
+                        {% if not note.read_at %}<span class="sr-only">(unread)</span>{% endif %}
+                    </button>
+                </form>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <div class="empty-state">
+        <h2>You're all caught up</h2>
+        <p>New messages and application updates show up here.</p>
+    </div>
+{% endif %}
+{% endblock %}

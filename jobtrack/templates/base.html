@@ -26,10 +26,11 @@
 
 {% if g.user %}
 {% set ep = request.endpoint or "" %}
-{% macro nav_item(endpoint, label, name, active) %}
+{% macro nav_item(endpoint, label, name, active, badge=0) %}
     <a href="{{ url_for(endpoint) }}" class="nav-item{{ ' is-active' if active }}"
        {% if active %}aria-current="page"{% endif %}>
         {{ icon(name) }}<span>{{ label }}</span>
+        {% if badge %}<span class="nav-badge">{{ badge if badge < 100 else "99+" }}<span class="sr-only"> unread</span></span>{% endif %}
     </a>
 {% endmacro %}
 
@@ -52,7 +53,8 @@
         {{ nav_item("applications.dashboard", "Dashboard", "dashboard", ep.startswith("applications.")) }}
         {{ nav_item("jobs.jobs", "Jobs", "jobs", ep in ("jobs.jobs", "jobs.job_details")) }}
         {{ nav_item("profile.profile", "Profile", "profile", ep.startswith("profile.")) }}
-        {% block extra_nav %}{% endblock %}
+        {{ nav_item("messages.conversations", "Messages", "messages", ep.startswith("messages."), unread_messages) }}
+        {{ nav_item("notifications.notifications", "Notifications", "notifications", ep.startswith("notifications."), unread_notifications) }}
         {{ nav_item("inbox.inbox", "Inbox", "inbox", ep.startswith("inbox.")) }}
         {{ nav_item("jobs.match_checker", "Match Checker", "match", ep == "jobs.match_checker") }}
     </nav>

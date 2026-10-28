@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}{{ other.name }}{% endblock %}
+
+{% block content %}
+<a class="back-link" href="{{ url_for('messages.conversations') }}">← All messages</a>
+
+<section class="thread">
+    <header class="thread-head">
+        <span class="person-avatar" aria-hidden="true">{{ (other.name.split() | map("first") | join)[:2] | upper }}</span>
+        <h1>{{ other.name }}</h1>
+        <details class="thread-menu">
+            <summary>Block or report</summary>
+            <div class="thread-menu-body">
+                {% if i_blocked %}
+                    <form method="POST" action="{{ url_for('messages.unblock', user_id=other.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-small btn-quiet" type="submit">Unblock {{ other.name.split()[0] }}</button>
+                    </form>
+                {% else %}
+                    <form method="POST" action="{{ url_for('messages.block', user_id=other.id) }}"
+                          data-confirm="Block {{ other.name }}? Neither of you will be able to send messages.">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-small btn-quiet" type="submit">Block {{ other.name.split()[0] }}</button>
+                    </form>
+                {% endif %}
+                <form method="POST" action="{{ url_for('messages.report', user_id=other.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <label for="reason">Report spam, scams or harassment</label>
+                    <textarea id="reason" name="reason" rows="2" maxlength="1000"
+                              placeholder="What happened? (optional)"></textarea>
+                    <button class="btn btn-small btn-danger" type="submit">Report and block</button>
+                </form>
+            </div>
+        </details>
+    </header>
+
+    {% include "messages/_thread.html" %}
+
+    {% if i_blocked %}
+        <p class="thread-notice">You blocked {{ other.name }}. Unblock them to send messages.</p>
+    {% elif they_blocked %}
+        <p class="thread-notice">You can't reply to this conversation.</p>
+    {% else %}
+        <form method="POST" class="reply">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label class="sr-only" for="body">Message</label>
+            <textarea id="body" name="body" rows="2" maxlength="2000" required
+                      placeholder="Write a message"></textarea>
+            <button class="btn" type="submit">Send</button>
+        </form>
+    {% endif %}
+</section>
+{% endblock %}
