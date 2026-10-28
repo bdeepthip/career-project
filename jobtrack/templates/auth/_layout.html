@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{# Split screen for log in, sign up and password pages: GAJ on the left, the form on the right. #}
+
+{% block public_header %}{% endblock %}
+{% block body_class %}auth{% endblock %}
+{% block public_main_class %}auth-split{% endblock %}
+{% block public_flashes %}{% endblock %}
+
+{% block content %}
+<section class="auth-brand" aria-label="GAJ">
+    <a class="auth-wordmark" href="{{ url_for('auth.home') }}">GAJ</a>
+    <p class="auth-tagline">get a job.</p>
+    <figure class="auth-daily">
+        <blockquote>{{ daily_line }}</blockquote>
+        <figcaption>Today's line</figcaption>
+    </figure>
+</section>
+
+<section class="auth-panel">
+    <div class="auth-form">
+        <h1>{% block auth_heading %}{% endblock %}</h1>
+        <p class="auth-lead">{% block auth_lead %}{% endblock %}</p>
+        {% include "_flashes.html" %}
+        {% block auth_form %}{% endblock %}
+        <div class="auth-switch">{% block auth_switch %}{% endblock %}</div>
+    </div>
+</section>
+{% endblock %}

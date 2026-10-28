@@ -23,6 +23,20 @@ PROFILE_FIELDS = [
 ]
 
 
+def profile_checklist(profile, skills, education, experience):
+    """What a strong profile has: (label, done?, where to fix it)."""
+    p = profile
+    return [
+        ("Headline", bool(p and p.headline), "#details"),
+        ("Location", bool(p and p.location), "#details"),
+        ("Target role", bool(p and p.target_role), "#details"),
+        ("About you", bool(p and p.about), "#details"),
+        ("At least 5 skills", len(skills) >= 5, "#skills"),
+        ("Education", bool(education), "#education"),
+        ("Work experience", bool(experience), "#experience"),
+    ]
+
+
 @bp.route("/profile", methods=["GET", "POST"])
 @login_required
 def profile():
@@ -55,8 +69,12 @@ def profile():
     experience = (Experience.query.filter_by(user_id=user_id)
                   .order_by(Experience.start_date.desc()).all())
 
+    checklist = profile_checklist(profile_data, skills, education, experience)
+
     return render_template(
         "profile/profile.html",
+        todo=[(label, anchor) for label, done, anchor in checklist if not done],
+        completeness=round(100 * sum(done for _, done, _ in checklist) / len(checklist)),
         profile=profile_data,
         skills=skills,
         education=education,

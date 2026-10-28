@@ -1,90 +1,104 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 
 {% block title %}Jobs{% endblock %}
 
 {% block content %}
 
-<h1>Find jobs</h1>
-<p class="page-subtitle">Search opportunities and see how your skills match.</p>
-
-<div class="notice">
-    These are <strong>sample listings</strong> for trying out Match Score. Real job listings are coming soon.
-    To check a real job, paste its description into the
-    <a href="{{ url_for('jobs.match_checker') }}">Match Checker</a>.
+<div class="page-header">
+    <h1>Jobs</h1>
 </div>
 
-{% if not has_skills %}
-    <div class="notice">
-        Add your skills on your <a href="{{ url_for('profile.profile') }}#skills">profile</a>
-        to see match scores.
+<section class="shift-banner" aria-label="Your time on GAJ today">
+    <div class="shift-banner-clock">
+        <p class="shift-banner-time"><span data-screen-time>{{ screen_time }}</span></p>
+        <p class="shift-banner-label">on GAJ today, of a 7-hour goal</p>
+        <progress class="shift-bar shift-bar-large" max="100" value="{{ screen_percent }}" data-screen-bar
+                  aria-label="Progress toward 7 hours today">{{ screen_percent }}%</progress>
     </div>
-{% endif %}
+    <p class="shift-banner-pitch">
+        Spend at least 7 hours a day on your search and your chances of getting hired go way up.
+        Treat it like a full-time job.
+    </p>
+</section>
 
-
-<form method="GET" action="{{ url_for('jobs.jobs') }}" class="job-search-form">
-
+<form method="GET" action="{{ url_for('jobs.jobs') }}" class="filter-bar">
     <label class="sr-only" for="search">Search</label>
-    <input type="text" id="search" name="search" placeholder="Job title, company or skill..." value="{{ search }}">
+    <input type="search" id="search" name="search" placeholder="Title, company or skill" value="{{ search }}">
 
-    <label class="sr-only" for="domain">Domain</label>
+    <label class="sr-only" for="domain">Field</label>
     <select id="domain" name="domain">
-        <option value="">All domains</option>
+        <option value="">All fields</option>
         {% for d in domains %}
             <option value="{{ d }}" {{ 'selected' if domain == d }}>{{ d }}</option>
         {% endfor %}
     </select>
 
     <label class="sr-only" for="location">Location</label>
-    <input type="text" id="location" name="location" placeholder="Location..." value="{{ location }}">
+    <input type="text" id="location" name="location" placeholder="Location" value="{{ location }}">
 
+    {% if posted %}<input type="hidden" name="posted" value="{{ posted }}">{% endif %}
     <button class="btn" type="submit">Search</button>
-    <a href="{{ url_for('jobs.jobs') }}" class="btn btn-secondary">Clear</a>
 </form>
 
+<nav class="chips" aria-label="Date posted">
+    {% set base_args = {"search": search or None, "domain": domain or None, "location": location or None} %}
+    <a class="chip{{ ' is-selected' if not posted }}" href="{{ url_for('jobs.jobs', **base_args) }}">Any time</a>
+    {% for value, window in posted_windows.items() %}
+        <a class="chip{{ ' is-selected' if posted == value }}"
+           href="{{ url_for('jobs.jobs', posted=value, **base_args) }}">{{ window[0] }}</a>
+    {% endfor %}
+</nav>
 
-<div class="jobs-grid">
+{% if not has_skills %}
+    <p class="hint">Add your skills on your <a href="{{ url_for('profile.profile') }}#skills">profile</a>
+        to see how well you match each job.</p>
+{% endif %}
 
+<p class="result-count">{{ jobs | length }} job{{ "s" if jobs | length != 1 }}{% if posted %} posted in the {{ posted_windows[posted][0] | lower }}{% endif %}</p>
+
+<div class="job-list">
     {% for job in jobs %}
         {% set level = "high" if job["match_score"] >= 70 else ("medium" if job["match_score"] >= 40 else "low") %}
+        <article class="job-row">
+            <span class="monogram monogram-{{ job['company'] | length % 6 }}" aria-hidden="true">{{ job["company"][:1] }}</span>
 
-        <article class="job-card">
+            <div class="job-row-main">
+                <h2><a href="{{ url_for('jobs.job_details', job_id=job['id']) }}">{{ job["title"] }}</a></h2>
+                <p class="job-row-company">{{ job["company"] }}</p>
+                <ul class="job-facts">
+                    <li>{{ icon("pin") }}{{ job["location"] }}</li>
+                    <li>{{ job["experience_level"] }}</li>
+                    <li>{{ job["domain"] }}</li>
+                    <li class="job-posted">Posted {{ job["posted_date"] | time_ago }}</li>
+                </ul>
+                <p class="job-row-skills">{{ job["required_skills"] }}</p>
+            </div>
 
-            <div class="job-card-top">
-                <div>
-                    <h2>{{ job["title"] }}</h2>
-                    <h3>{{ job["company"] }}</h3>
-                </div>
-                <div class="badges">
-                    <span class="job-domain">{{ job["domain"] }}</span>
-                    {% if has_skills %}
-                        <span class="match-badge {{ level }}">{{ job["match_score"] }}% match</span>
+            <div class="job-row-side">
+                {% if has_skills %}
+                    <p class="match match-{{ level }}"><strong>{{ job["match_score"] }}%</strong> match</p>
+                {% endif %}
+                <div class="job-row-actions">
+                    {% if job["job_url"] %}
+                        <a class="btn btn-small" href="{{ job['job_url'] }}" target="_blank"
+                           rel="noopener noreferrer">Apply on company site{{ icon("external") }}</a>
                     {% endif %}
+                    <a class="btn btn-small btn-quiet" href="{{ url_for('jobs.job_details', job_id=job['id']) }}">Details</a>
                 </div>
             </div>
-
-            <div class="job-meta">
-                <span>{{ job["location"] }}</span>
-                <span>{{ job["experience_level"] }}</span>
-                <span>Posted {{ job["posted_date"] }}</span>
-            </div>
-
-            <p class="job-skills"><strong>Skills:</strong> {{ job["required_skills"] }}</p>
-            <p class="job-description">{{ job["description"] }}</p>
-
-            <a href="{{ url_for('jobs.job_details', job_id=job['id']) }}" class="btn">View job</a>
-
         </article>
-
     {% else %}
-
         <div class="empty-state">
             <h2>No jobs found</h2>
-            <p>Try changing your search or filters.</p>
-            <a href="{{ url_for('jobs.jobs') }}" class="btn">View all jobs</a>
+            <p>{% if posted %}Nothing was posted in the {{ posted_windows[posted][0] | lower }}. Try a longer window.
+               {% else %}Try a different search or field.{% endif %}</p>
+            <a href="{{ url_for('jobs.jobs') }}" class="btn btn-quiet">Show all jobs</a>
         </div>
-
     {% endfor %}
-
 </div>
+
+<p class="footnote">These are sample listings while GAJ is in beta. To check a real posting, paste it into the
+    <a href="{{ url_for('jobs.match_checker') }}">Match Checker</a>.</p>
 
 {% endblock %}

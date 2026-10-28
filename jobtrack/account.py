@@ -13,7 +13,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from .auth import login_required, start_session
 from .inbox import forwarding_address
 from .models import (
-    Education, Experience, JobApplication, JobEmail, Profile, Skill, User, db
+    Education, Experience, JobApplication, JobEmail, Profile, Skill, User, UserActivity, db
 )
 from .validation import MIN_PASSWORD_LENGTH, clean
 
@@ -21,7 +21,7 @@ bp = Blueprint("account", __name__)
 
 # Every table that holds a user's data, in the order to delete them
 # (rows that point at other rows go first)
-USER_MODELS = [JobEmail, JobApplication, Skill, Education, Experience, Profile]
+USER_MODELS = [JobEmail, JobApplication, Skill, Education, Experience, Profile, UserActivity]
 
 
 @bp.route("/account")
@@ -101,6 +101,7 @@ def export_data():
         "inbox_emails": _rows(JobEmail, ["sender", "subject", "body", "received_at",
                                          "detected_status", "application_id", "update_note"],
                               JobEmail.received_at),
+        "screen_time": _rows(UserActivity, ["day", "seconds"], UserActivity.day),
     }
 
     filename = f"gaj-export-{date.today().isoformat()}.json"

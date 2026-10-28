@@ -130,7 +130,8 @@ def test_password_change_signs_out_other_devices(app, auth):
 
 def test_change_name(client, logged_in):
     client.post("/account/name", data={"name": "New Name"})
-    assert b"Welcome, New Name" in client.get("/dashboard").data
+    assert b"New Name" in client.get("/profile").data
+    assert b"Good to see you, New." in client.get("/dashboard").data
 
 
 # ---------- Export ----------

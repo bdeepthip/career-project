@@ -1,17 +1,44 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 
 {% block title %}Profile{% endblock %}
-{% block main_class %}profile-page{% endblock %}
 
 {% block content %}
 
-<!-- PROFESSIONAL PROFILE -->
+{% set p = profile %}
+{% set initials = (g.user["name"].split() | map("first") | join)[:2] | upper %}
 
-<section class="panel">
+<section class="profile-hero">
+    <div class="avatar" aria-hidden="true">{{ initials }}</div>
+    <div class="profile-hero-text">
+        <h1>{{ g.user["name"] }}</h1>
+        <p class="profile-headline">{{ p.headline if p and p.headline else "Add a headline so people know what you do" }}</p>
+        <ul class="profile-facts">
+            {% if p and p.location %}<li>{{ icon("pin") }}{{ p.location }}</li>{% endif %}
+            {% if p and p.target_role %}<li>Looking for: <strong>{{ p.target_role }}</strong></li>{% endif %}
+            {% if p and p.experience_level %}<li>{{ p.experience_level }}</li>{% endif %}
+            {% if p and p.preferred_location %}<li>Open to: {{ p.preferred_location }}</li>{% endif %}
+        </ul>
+    </div>
 
-    <h1>Professional profile</h1>
-    <p class="page-subtitle">Your career goals, used to personalize jobs and match scores.</p>
+    <div class="strength">
+        <p class="strength-number">{{ completeness }}%</p>
+        <p class="strength-label">profile strength</p>
+        <progress class="strength-bar" max="100" value="{{ completeness }}">{{ completeness }}%</progress>
+        {% if todo %}
+            <ul class="strength-todo">
+                {% for label, anchor in todo[:3] %}
+                    <li><a href="{{ anchor }}">Add {{ label | lower }}</a></li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="strength-done">Complete. Recruiters see the full picture.</p>
+        {% endif %}
+    </div>
+</section>
 
+<details class="edit-details" id="details" {{ "open" if not (p and p.headline) }}>
+    <summary>{{ icon("edit") }}Edit your details</summary>
     <form method="POST" action="{{ url_for('profile.profile') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
@@ -80,143 +107,83 @@
 
         <button class="btn" type="submit">Save profile</button>
     </form>
+</details>
 
-</section>
+<div class="profile-columns">
 
+    <div class="profile-col">
 
-<!-- SKILLS -->
+        <section class="profile-section" id="about">
+            <h2>About</h2>
+            {% if p and p.about %}
+                <p class="about-text">{{ p.about }}</p>
+            {% else %}
+                <p class="muted">A few sentences about what you do and what you're looking for.
+                    <a href="#details">Add it</a></p>
+            {% endif %}
+        </section>
 
-<section class="panel" id="skills">
+        <section class="profile-section" id="skills">
+            <h2>Skills <span class="count">{{ skills | length }}</span></h2>
+            <p class="muted small">Your match score compares these with each job. Add several at once with commas.</p>
 
-    <h2>Skills</h2>
-    <p class="page-subtitle">Your Match Score compares these with each job. Add several at once with commas.</p>
-
-    <form method="POST" action="{{ url_for('profile.add_skill') }}" class="inline-add">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <label class="sr-only" for="skill_name">Add skills</label>
-        <input type="text" id="skill_name" name="skill_name" placeholder="Example: Python, SQL, Git" required>
-        <button class="btn" type="submit">Add</button>
-    </form>
-
-    {% if skills %}
-        <div class="skills-list">
-            {% for skill in skills %}
-                <div class="skill-item">
-                    <span>{{ skill["skill_name"] }}</span>
-                    <form method="POST" action="{{ url_for('profile.delete_skill', skill_id=skill['id']) }}">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="skill-delete" aria-label="Remove {{ skill['skill_name'] }}">×</button>
-                    </form>
-                </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <p class="muted">No skills added yet.</p>
-    {% endif %}
-
-</section>
-
-
-<!-- EDUCATION -->
-
-<section class="panel" id="education">
-
-    <h2>Education</h2>
-
-    {% for item in education %}
-        <div class="profile-entry">
-            <div>
-                <h3>{{ item["degree"] }}</h3>
-                <p><strong>{{ item["institution"] }}</strong></p>
-                {% if item["field_of_study"] %}<p>{{ item["field_of_study"] }}</p>{% endif %}
-                {% if item["start_year"] or item["end_year"] %}
-                    <p>{{ item["start_year"] or "" }}{% if item["start_year"] and item["end_year"] %} – {% endif %}{{ item["end_year"] or "" }}</p>
-                {% endif %}
-            </div>
-            <form method="POST" action="{{ url_for('profile.delete_education', education_id=item['id']) }}"
-                  data-confirm="Delete this education entry?">
+            <form method="POST" action="{{ url_for('profile.add_skill') }}" class="inline-add">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button class="btn btn-small btn-danger" type="submit">Delete</button>
+                <label class="sr-only" for="skill_name">Add skills</label>
+                <input type="text" id="skill_name" name="skill_name" placeholder="Python, SQL, Git" required>
+                <button class="btn" type="submit">Add</button>
             </form>
-        </div>
-    {% else %}
-        <p class="muted">No education added yet.</p>
-    {% endfor %}
 
-    <details class="add-section">
-        <summary>+ Add education</summary>
+            {% if skills %}
+                <ul class="skills-list">
+                    {% for skill in skills %}
+                        <li class="skill-item">
+                            <span>{{ skill["skill_name"] }}</span>
+                            <form method="POST" action="{{ url_for('profile.delete_skill', skill_id=skill['id']) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="skill-delete" aria-label="Remove {{ skill['skill_name'] }}">×</button>
+                            </form>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </section>
 
-        <form method="POST" action="{{ url_for('profile.add_education') }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="institution">Institution</label>
-                    <input type="text" id="institution" name="institution" maxlength="150"
-                           placeholder="Example: Temple University" required>
-                </div>
-                <div class="form-group">
-                    <label for="degree">Degree</label>
-                    <input type="text" id="degree" name="degree" maxlength="150"
-                           placeholder="Example: Master of Science" required>
-                </div>
-            </div>
+    <div class="profile-col">
 
-            <div class="form-group">
-                <label for="field_of_study">Field of study</label>
-                <input type="text" id="field_of_study" name="field_of_study" maxlength="150"
-                       placeholder="Example: Computer Science">
-            </div>
+        <section class="profile-section" id="experience">
+            <h2>Experience</h2>
+            {% if experience %}
+                <ol class="timeline">
+                    {% for item in experience %}
+                        <li class="timeline-item">
+                            <div class="timeline-head">
+                                <div>
+                                    <h3>{{ item["job_title"] }}</h3>
+                                    <p class="timeline-org">{{ item["company"] }}{% if item["location"] %}, {{ item["location"] }}{% endif %}</p>
+                                    {% if item["start_date"] or item["end_date"] %}
+                                        <p class="timeline-dates">{{ item["start_date"] | month_label }} to {{ item["end_date"] | month_label if item["end_date"] else "present" }}</p>
+                                    {% endif %}
+                                </div>
+                                <form method="POST" action="{{ url_for('profile.delete_experience', experience_id=item['id']) }}"
+                                      data-confirm="Delete this experience entry?">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button class="btn btn-small btn-danger-quiet" type="submit">Delete</button>
+                                </form>
+                            </div>
+                            {% if item["description"] %}<p class="timeline-text">{{ item["description"] }}</p>{% endif %}
+                        </li>
+                    {% endfor %}
+                </ol>
+            {% else %}
+                <p class="muted">No work experience yet. Internships and part-time jobs count.</p>
+            {% endif %}
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="start_year">Start year</label>
-                    <input type="number" id="start_year" name="start_year" min="1950" max="2100" placeholder="2025">
-                </div>
-                <div class="form-group">
-                    <label for="end_year">End year</label>
-                    <input type="number" id="end_year" name="end_year" min="1950" max="2100" placeholder="2027">
-                </div>
-            </div>
-
-            <button class="btn" type="submit">Save education</button>
-        </form>
-    </details>
-
-</section>
-
-
-<!-- EXPERIENCE -->
-
-<section class="panel" id="experience">
-
-    <h2>Work experience</h2>
-
-    {% for item in experience %}
-        <div class="profile-entry">
-            <div>
-                <h3>{{ item["job_title"] }}</h3>
-                <p><strong>{{ item["company"] }}</strong></p>
-                {% if item["location"] %}<p>{{ item["location"] }}</p>{% endif %}
-                {% if item["start_date"] or item["end_date"] %}
-                    <p>{{ item["start_date"] or "" }} – {{ item["end_date"] or "Present" }}</p>
-                {% endif %}
-                {% if item["description"] %}<p>{{ item["description"] }}</p>{% endif %}
-            </div>
-            <form method="POST" action="{{ url_for('profile.delete_experience', experience_id=item['id']) }}"
-                  data-confirm="Delete this experience entry?">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button class="btn btn-small btn-danger" type="submit">Delete</button>
-            </form>
-        </div>
-    {% else %}
-        <p class="muted">No work experience added yet.</p>
-    {% endfor %}
-
-    <details class="add-section">
-        <summary>+ Add experience</summary>
-
-        <form method="POST" action="{{ url_for('profile.add_experience') }}">
+            <details class="add-section">
+                <summary>{{ icon("plus") }}Add experience</summary>
+                <form method="POST" action="{{ url_for('profile.add_experience') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
             <div class="form-row">
@@ -254,8 +221,77 @@
 
             <button class="btn" type="submit">Save experience</button>
         </form>
-    </details>
+            </details>
+        </section>
 
-</section>
+        <section class="profile-section" id="education">
+            <h2>Education</h2>
+            {% if education %}
+                <ol class="timeline">
+                    {% for item in education %}
+                        <li class="timeline-item">
+                            <div class="timeline-head">
+                                <div>
+                                    <h3>{{ item["degree"] }}{% if item["field_of_study"] %}, {{ item["field_of_study"] }}{% endif %}</h3>
+                                    <p class="timeline-org">{{ item["institution"] }}</p>
+                                    {% if item["start_year"] or item["end_year"] %}
+                                        <p class="timeline-dates">{{ item["start_year"] or "" }}{% if item["start_year"] and item["end_year"] %} to {% endif %}{{ item["end_year"] or "" }}</p>
+                                    {% endif %}
+                                </div>
+                                <form method="POST" action="{{ url_for('profile.delete_education', education_id=item['id']) }}"
+                                      data-confirm="Delete this education entry?">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button class="btn btn-small btn-danger-quiet" type="submit">Delete</button>
+                                </form>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ol>
+            {% else %}
+                <p class="muted">No education yet.</p>
+            {% endif %}
+
+            <details class="add-section">
+                <summary>{{ icon("plus") }}Add education</summary>
+                <form method="POST" action="{{ url_for('profile.add_education') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="institution">Institution</label>
+                    <input type="text" id="institution" name="institution" maxlength="150"
+                           placeholder="Example: Temple University" required>
+                </div>
+                <div class="form-group">
+                    <label for="degree">Degree</label>
+                    <input type="text" id="degree" name="degree" maxlength="150"
+                           placeholder="Example: Master of Science" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="field_of_study">Field of study</label>
+                <input type="text" id="field_of_study" name="field_of_study" maxlength="150"
+                       placeholder="Example: Computer Science">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="start_year">Start year</label>
+                    <input type="number" id="start_year" name="start_year" min="1950" max="2100" placeholder="2025">
+                </div>
+                <div class="form-group">
+                    <label for="end_year">End year</label>
+                    <input type="number" id="end_year" name="end_year" min="1950" max="2100" placeholder="2027">
+                </div>
+            </div>
+
+            <button class="btn" type="submit">Save education</button>
+        </form>
+            </details>
+        </section>
+
+    </div>
+</div>
 
 {% endblock %}

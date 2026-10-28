@@ -187,3 +187,15 @@ class JobEmail(RowAccessMixin, db.Model):
     @property
     def app_title(self):
         return self.application.job_title if self.application else None
+
+
+class UserActivity(RowAccessMixin, db.Model):
+    """Time spent actively using GAJ, per user per day (the screen-time meter)."""
+    __tablename__ = "user_activity"
+    __table_args__ = (UniqueConstraint("user_id", "day", name="uq_activity_user_day"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    day: Mapped[str] = mapped_column(Text, nullable=False)        # "YYYY-MM-DD", the user's local date
+    seconds: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    last_ping: Mapped[str | None] = mapped_column(Text)          # UTC "YYYY-MM-DD HH:MM:SS"

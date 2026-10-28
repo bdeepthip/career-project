@@ -17,7 +17,7 @@ def test_profile_save_and_update(client, logged_in):
 def test_jobs_show_match_score(client, logged_in):
     client.post("/skills/add", data={"skill_name": "Python, SQL, Git"})
     page = client.get("/jobs").data
-    assert b"60% match" in page   # TechNova: 3 of 5 skills
+    assert b"<strong>60%</strong> match" in page   # TechNova: 3 of 5 skills
 
 
 def test_job_details_learning_plan(client, logged_in):

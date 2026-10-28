@@ -71,6 +71,7 @@ def dashboard():
         statuses=STATUSES,
         search=search,
         status_filter=status_filter,
+        today_label=date.today().strftime("%A, %B %-d"),
     )
 
 

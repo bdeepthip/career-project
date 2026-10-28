@@ -16,7 +16,7 @@
     <div class="job-meta">
         <span>{{ job["location"] }}</span>
         <span>{{ job["experience_level"] }}</span>
-        <span>Posted {{ job["posted_date"] }}</span>
+        <span>Posted {{ job["posted_date"] | time_ago }}</span>
     </div>
 
     <hr>
