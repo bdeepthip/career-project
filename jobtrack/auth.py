@@ -104,7 +104,7 @@ def register():
         error = None
         if invite_code and not hmac.compare_digest(typed_code.lower().encode(),
                                                    invite_code.lower().encode()):
-            error = "JobTrack is in private beta. Enter the invite code you were given."
+            error = "GAJ is in private beta. Enter the invite code you were given."
         elif not name or not email or not password:
             error = "All fields are required."
         elif not is_valid_email(email):
@@ -185,9 +185,9 @@ def forgot_password():
                            token=make_reset_token(user), _external=True)
             send_email(
                 user["email"],
-                "Reset your JobTrack password",
+                "Reset your GAJ password",
                 f"Hi {user['name']},\n\n"
-                f"Someone asked to reset the password for your JobTrack account. "
+                f"Someone asked to reset the password for your GAJ account. "
                 f"To choose a new password, open this link within 1 hour:\n\n"
                 f"{link}\n\n"
                 f"If this wasn't you, ignore this email. Your password stays the same.\n",

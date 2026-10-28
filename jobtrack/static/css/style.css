@@ -1,5 +1,5 @@
 /* =========================================
-   JobTrack styles
+   GAJ styles
    Colors live in variables so they can be changed in one place.
    ========================================= */
 
@@ -420,6 +420,15 @@ tr:hover td { background: var(--surface-soft); }
 }
 
 .hero-content { max-width: 750px; }
+
+.hero-eyebrow {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.85;
+    margin-bottom: 10px;
+}
 
 .hero h1 {
     font-size: 52px;

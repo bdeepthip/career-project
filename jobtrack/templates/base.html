@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}JobTrack{% endblock %} | JobTrack</title>
+    <title>{% block title %}Get A Job{% endblock %} | GAJ</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
@@ -17,7 +17,7 @@
 
 <nav class="navbar">
 
-    <a class="brand" href="{{ url_for('auth.home') }}">JobTrack</a>
+    <a class="brand" href="{{ url_for('auth.home') }}">GAJ</a>
 
     <div class="nav-links">
         {% if g.user %}
@@ -66,7 +66,7 @@
 </main>
 
 <footer class="site-footer">
-    <span>JobTrack</span>
+    <span>GAJ · Get A Job</span>
     <a href="{{ url_for('pages.privacy') }}">Privacy</a>
     <a href="{{ url_for('pages.terms') }}">Terms</a>
     {% if feedback_url %}<a href="{{ feedback_url }}" target="_blank" rel="noopener">Send feedback</a>{% endif %}

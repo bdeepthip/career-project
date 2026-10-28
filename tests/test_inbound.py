@@ -21,7 +21,7 @@ def token_of(app, email="test@example.com"):
 
 
 def address_of(app, email="test@example.com"):
-    return f"jt-{token_of(app, email)}@{DOMAIN}"
+    return f"gaj-{token_of(app, email)}@{DOMAIN}"
 
 
 def status_of(app, company):
@@ -52,7 +52,7 @@ def test_new_user_gets_a_private_address(app, client, logged_in):
     token = token_of(app)
     assert token and len(token) == 14
     page = client.get("/inbox").data.decode()
-    assert f"jt-{token}@{DOMAIN}" in page
+    assert f"gaj-{token}@{DOMAIN}" in page
     assert "Set up automatic forwarding from Gmail" in page
 
 
@@ -113,7 +113,7 @@ def test_inbox_says_when_forwarding_is_off(tmp_path):
 def test_webhook_needs_no_csrf_token_but_address_change_does(tmp_path):
     app = make_app(tmp_path, WTF_CSRF_ENABLED=True)
     client = app.test_client()
-    response = client.post("/inbound/email", json={"OriginalRecipient": "jt-x@" + DOMAIN},
+    response = client.post("/inbound/email", json={"OriginalRecipient": "gaj-x@" + DOMAIN},
                            headers={"X-JobTrack-Secret": SECRET})
     assert response.status_code == 200          # webhook: no CSRF needed
     assert client.post("/inbox/address/new").status_code == 400  # CSRF still required
@@ -144,9 +144,9 @@ def test_email_goes_only_to_the_addressed_user(app, client, auth):
 
 def test_unknown_or_foreign_address_is_ignored(app, client, logged_in):
     token = token_of(app)
-    assert postmark(client, f"jt-notarealtoken1@{DOMAIN}").get_json()["status"] == "ignored"
+    assert postmark(client, f"gaj-notarealtoken1@{DOMAIN}").get_json()["status"] == "ignored"
     # right token, wrong domain: not ours
-    assert postmark(client, f"jt-{token}@evil.example").get_json()["status"] == "ignored"
+    assert postmark(client, f"gaj-{token}@evil.example").get_json()["status"] == "ignored"
     assert email_count(app) == 0
 
 
@@ -271,3 +271,13 @@ def test_existing_users_get_an_address_from_the_migration(tmp_path):
         upgrade(directory=MIGRATIONS_DIR)
         tokens = [u.inbound_token for u in User.query.all()]
     assert len(tokens) == 2 and all(tokens) and tokens[0] != tokens[1]
+
+
+def test_old_jt_prefix_still_delivers(app, client, logged_in):
+    """Addresses were jt-... before the rename to GAJ; they keep working."""
+    assert postmark(client, f"jt-{token_of(app)}@{DOMAIN}").get_json()["status"] == "processed"
+
+
+def test_app_is_called_gaj(client):
+    page = client.get("/").data
+    assert b"GAJ" in page and b"Get A Job" in page and b"JobTrack" not in page

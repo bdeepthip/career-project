@@ -43,7 +43,7 @@ def forwarding_address(user):
     if not user.inbound_token:  # accounts made before the address existed
         user.inbound_token = new_inbound_token()
         db.session.commit()
-    return f"jt-{user.inbound_token}@{current_app.config['INBOUND_DOMAIN']}"
+    return f"gaj-{user.inbound_token}@{current_app.config['INBOUND_DOMAIN']}"
 
 
 # Paste into Gmail's filter "Has the words" box: common applicant-tracking

@@ -1,5 +1,5 @@
 """
-JobTrack application factory.
+GAJ application factory.
 
 create_app() builds the Flask app: loads settings, connects the
 database, turns on CSRF protection and rate limits, and registers each
@@ -17,7 +17,7 @@ from . import db
 from .config import check_production_settings, get_config
 from .extensions import csrf, limiter
 
-# Strict browser rules: only run scripts and styles served by JobTrack
+# Strict browser rules: only run scripts and styles served by GAJ
 # itself, so injected HTML can't load or run anything
 CONTENT_SECURITY_POLICY = "; ".join([
     "default-src 'self'",
@@ -140,7 +140,7 @@ def register_security_headers(app):
 
     @app.after_request
     def add_headers(response):
-        # Stop other sites from showing JobTrack inside a frame
+        # Stop other sites from showing GAJ inside a frame
         response.headers["X-Frame-Options"] = "DENY"
         # Stop browsers from guessing file types
         response.headers["X-Content-Type-Options"] = "nosniff"

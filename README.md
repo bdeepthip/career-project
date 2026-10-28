@@ -1,4 +1,4 @@
-# JobTrack
+# GAJ (Get A Job)
 
 A job application tracker: log every application, see how your skills
 match a job, and let job emails update your application statuses.
@@ -11,7 +11,7 @@ match a job, and let job emails update your application statuses.
 - **Learning plan**: free courses and time estimates for missing skills
 - **Accounts**: password reset by email, change password (signs out
   other devices), download all your data, delete your account
-- **Inbox**: paste a job email; JobTrack detects Applied / Interview /
+- **Inbox**: paste a job email; GAJ detects Applied / Interview /
   Offer / Rejected, matches the company, and updates the application
   (never moving a status backwards)
 
@@ -79,7 +79,7 @@ SendGrid form posts. Details:
 - Changing a password signs out every other device
 - Rate limits on log-in, sign-up and password reset: per network, and
   per account so a password can't be guessed from many addresses
-- Content-Security-Policy allows only JobTrack's own scripts and styles
+- Content-Security-Policy allows only GAJ's own scripts and styles
   (no inline JavaScript anywhere)
 - In production: HTTPS only (HSTS), secure cookies, and the app refuses
   to start with a short SECRET_KEY, a SQLite database, or no email server
@@ -101,7 +101,7 @@ in the terminal, so you can copy the link while developing.
 
 ## Database
 
-JobTrack runs on **SQLite** on your laptop (`database.db`, no setup)
+GAJ runs on **SQLite** on your laptop (`database.db`, no setup)
 and **PostgreSQL** in production. Set `DATABASE_URL` in `.env` to
 switch; nothing else changes.
 
@@ -118,7 +118,7 @@ migrations existed is upgraded in place, keeping all its data.
 
 ## Going live
 
-`LAUNCH.md` walks through putting JobTrack online step by step: domain,
+`LAUNCH.md` walks through putting GAJ online step by step: domain,
 hosting (Render), database (Neon), sending and receiving email, the
 live-site checklist, and inviting beta testers. It costs about $7 a
 month plus the domain.
