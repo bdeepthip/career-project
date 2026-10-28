@@ -21,8 +21,9 @@ match a job, and let job emails update your application statuses.
 |---|---|
 | App setup, security headers, error pages | `jobtrack/__init__.py` |
 | Settings (development / production) | `jobtrack/config.py` |
-| Database connection per request | `jobtrack/db.py` |
-| Tables | `jobtrack/schema.sql` |
+| Tables (SQLAlchemy models) | `jobtrack/models.py` |
+| Database commands (`init-db`, `seed`) | `jobtrack/db.py` |
+| Versioned schema changes (Alembic) | `migrations/versions/` |
 | Accounts, password reset, `@login_required` | `jobtrack/auth.py` |
 | Account settings, export, deletion | `jobtrack/account.py` |
 | Signed, expiring reset tokens | `jobtrack/tokens.py` |
@@ -45,7 +46,7 @@ lets you fix a match by hand.
 
 - Passwords stored as salted hashes (Werkzeug)
 - CSRF protection on every form (Flask-WTF)
-- Every query is parameterized and scoped to the logged-in user;
+- Every query goes through SQLAlchemy (parameterized) and is scoped to the logged-in user;
   tests confirm one user can't see or change another's data
 - Server-side validation of all form input, including blocking
   `javascript:` links
@@ -70,20 +71,39 @@ python app.py                     # http://127.0.0.1:5001
 Without email settings in `.env`, password reset emails are printed
 in the terminal, so you can copy the link while developing.
 
+## Database
+
+JobTrack runs on **SQLite** on your laptop (`database.db`, no setup)
+and **PostgreSQL** in production. Set `DATABASE_URL` in `.env` to
+switch; nothing else changes.
+
+```bash
+flask --app app init-db                      # create or upgrade; never deletes data
+flask --app app db migrate -m "add column"   # after changing models.py
+flask --app app init-db                      # apply that new migration
+```
+
+Every change to the tables is a versioned migration in
+`migrations/versions/`, so every copy of the database can be brought
+to the same structure safely. A `database.db` created before
+migrations existed is upgraded in place, keeping all its data.
+
 ## Tests
 
 ```bash
 python -m pytest
+# the same tests against PostgreSQL (uses an empty, wipeable database):
+TEST_DATABASE_URL=postgresql://user:pass@localhost/jobtrack_test python -m pytest
 ```
 
-80 tests cover accounts, password reset, data export and deletion, data privacy between users, CSRF, input
+CI runs every test on both SQLite and PostgreSQL. 80 tests cover accounts, password reset, data export and deletion, data privacy between users, CSRF, input
 validation, Match Score, email parsing and the Inbox.
 
 ## Roadmap
 
 1. Foundation: code structure, CSRF, validation, tests (done)
 2. Accounts: password reset, account deletion, data export (done)
-3. PostgreSQL with migrations
+3. PostgreSQL with migrations (done)
 4. A personal email forwarding address for every user
 5. Public beta: deployment, domain, privacy policy
 6. Real job listings and a resume builder

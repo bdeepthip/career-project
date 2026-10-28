@@ -34,9 +34,9 @@ def test_register_rejects_bad_email(auth):
 
 def test_password_is_hashed(app, auth):
     auth.register(password="password123")
-    from jobtrack.db import get_db
+    from jobtrack.models import User
     with app.app_context():
-        stored = get_db().execute("SELECT password FROM users").fetchone()[0]
+        stored = User.query.one().password
     assert stored != "password123"
 
 

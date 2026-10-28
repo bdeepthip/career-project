@@ -3,16 +3,16 @@ Accounts: register, log in, log out, and the login_required helper.
 """
 
 import functools
-import sqlite3
 from urllib.parse import urlparse
 
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, session, url_for
 )
+from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from .db import get_db
 from .mailer import send_email
+from .models import User, db
 from .tokens import make_reset_token, password_fingerprint, read_reset_token
 from .validation import MIN_PASSWORD_LENGTH, clean, is_valid_email
 
@@ -28,9 +28,7 @@ def load_logged_in_user():
     g.user = None
 
     if user_id is not None:
-        user = get_db().execute(
-            "SELECT id, name, email, password FROM users WHERE id = ?", (user_id,)
-        ).fetchone()
+        user = db.session.get(User, user_id)
 
         # Log out if the account was deleted, or if the password changed
         # since this session logged in (password change = sign out everywhere)
@@ -100,14 +98,12 @@ def register():
             error = f"Password must be at least {MIN_PASSWORD_LENGTH} characters."
 
         if error is None:
-            db = get_db()
             try:
-                db.execute(
-                    "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
-                    (name, email, generate_password_hash(password)),
-                )
-                db.commit()
-            except sqlite3.IntegrityError:
+                db.session.add(User(name=name, email=email,
+                                    password=generate_password_hash(password)))
+                db.session.commit()
+            except IntegrityError:
+                db.session.rollback()
                 # UNIQUE(email) caught a duplicate. Checking first and then
                 # inserting can race; letting the database decide cannot.
                 error = "An account with this email already exists."
@@ -131,9 +127,7 @@ def login():
         email = clean(request.form, "email", 254).lower()
         password = request.form.get("password") or ""
 
-        user = get_db().execute(
-            "SELECT * FROM users WHERE email = ?", (email,)
-        ).fetchone()
+        user = User.query.filter_by(email=email).first()
 
         # Same message whether the email or the password is wrong,
         # so nobody can use this form to find out who has an account.
@@ -164,9 +158,7 @@ def forgot_password():
     if request.method == "POST":
         email = clean(request.form, "email", 254).lower()
 
-        user = get_db().execute(
-            "SELECT * FROM users WHERE email = ?", (email,)
-        ).fetchone()
+        user = User.query.filter_by(email=email).first()
 
         if user is not None:
             link = url_for("auth.reset_password",
@@ -196,7 +188,7 @@ def _user_for_token(token):
     if data is None:
         return None
     user_id, fingerprint = data
-    user = get_db().execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+    user = db.session.get(User, user_id)
     if user is None or password_fingerprint(user["password"]) != fingerprint:
         return None
     return user
@@ -219,10 +211,8 @@ def reset_password(token):
         elif password != confirm:
             flash("The two passwords don't match.", "error")
         else:
-            db = get_db()
-            db.execute("UPDATE users SET password = ? WHERE id = ?",
-                       (generate_password_hash(password), user["id"]))
-            db.commit()
+            user.password = generate_password_hash(password)
+            db.session.commit()
             # Changing the password makes this link (and every older one)
             # stop working, and signs out every logged-in device
             flash("Your password was reset. Log in with your new password.", "success")

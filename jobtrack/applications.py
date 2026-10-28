@@ -7,12 +7,16 @@ from datetime import date
 from flask import (
     Blueprint, abort, flash, g, redirect, render_template, request, url_for
 )
+from sqlalchemy import func, or_
 
 from .auth import login_required
-from .db import get_db
+from .models import JobApplication, JobEmail, db
 from .validation import STATUSES, validate_application
 
 bp = Blueprint("applications", __name__)
+
+FORM_FIELDS = ["company", "job_title", "location", "job_url",
+               "date_applied", "status", "notes"]
 
 
 def get_application(application_id):
@@ -20,10 +24,9 @@ def get_application(application_id):
     Someone else's id gives 404, the same as an id that doesn't
     exist, so it never reveals that the record is there."""
 
-    application = get_db().execute(
-        "SELECT * FROM job_applications WHERE id = ? AND user_id = ?",
-        (application_id, g.user["id"]),
-    ).fetchone()
+    application = JobApplication.query.filter_by(
+        id=application_id, user_id=g.user.id
+    ).first()
 
     if application is None:
         abort(404)
@@ -33,40 +36,32 @@ def get_application(application_id):
 @bp.route("/dashboard")
 @login_required
 def dashboard():
-    db = get_db()
-    user_id = g.user["id"]
-
     search = request.args.get("search", "").strip()[:100]
     status_filter = request.args.get("status", "").strip()
     if status_filter not in STATUSES:
         status_filter = ""
 
-    query = "SELECT * FROM job_applications WHERE user_id = ?"
-    params = [user_id]
+    query = JobApplication.query.filter_by(user_id=g.user.id)
 
     if search:
-        query += " AND (company LIKE ? OR job_title LIKE ?)"
-        params += [f"%{search}%", f"%{search}%"]
+        pattern = f"%{search}%"
+        # ilike = case-insensitive LIKE on both SQLite and PostgreSQL
+        query = query.filter(or_(JobApplication.company.ilike(pattern),
+                                 JobApplication.job_title.ilike(pattern)))
 
     if status_filter:
-        query += " AND status = ?"
-        params.append(status_filter)
+        query = query.filter_by(status=status_filter)
 
-    query += " ORDER BY date_applied DESC, id DESC"
-    applications = db.execute(query, params).fetchall()
+    applications = query.order_by(JobApplication.date_applied.desc(),
+                                  JobApplication.id.desc()).all()
 
-    # One query for all the counts (was five separate queries)
+    # One query for all the counts: SELECT status, COUNT(*) ... GROUP BY status
     counts = {status: 0 for status in STATUSES}
-    for row in db.execute(
-        """
-        SELECT status, COUNT(*) AS n
-        FROM job_applications
-        WHERE user_id = ?
-        GROUP BY status
-        """,
-        (user_id,),
-    ):
-        counts[row["status"]] = row["n"]
+    rows = (db.session.query(JobApplication.status, func.count())
+            .filter(JobApplication.user_id == g.user.id)
+            .group_by(JobApplication.status))
+    for status, n in rows:
+        counts[status] = n
 
     return render_template(
         "applications/dashboard.html",
@@ -94,19 +89,8 @@ def add_application():
                 statuses=STATUSES, mode="add",
             ), 400
 
-        db = get_db()
-        db.execute(
-            """
-            INSERT INTO job_applications
-            (user_id, company, job_title, location, job_url,
-             date_applied, status, notes)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (g.user["id"], data["company"], data["job_title"],
-             data["location"], data["job_url"], data["date_applied"],
-             data["status"], data["notes"]),
-        )
-        db.commit()
+        db.session.add(JobApplication(user_id=g.user.id, **data))
+        db.session.commit()
 
         flash(f"Added {data['company']}.", "success")
         return redirect(url_for("applications.dashboard"))
@@ -144,19 +128,9 @@ def edit_application(application_id):
                 statuses=STATUSES, mode="edit",
             ), 400
 
-        db = get_db()
-        db.execute(
-            """
-            UPDATE job_applications
-            SET company = ?, job_title = ?, location = ?, job_url = ?,
-                date_applied = ?, status = ?, notes = ?
-            WHERE id = ? AND user_id = ?
-            """,
-            (data["company"], data["job_title"], data["location"],
-             data["job_url"], data["date_applied"], data["status"],
-             data["notes"], application_id, g.user["id"]),
-        )
-        db.commit()
+        for field in FORM_FIELDS:
+            setattr(application, field, data[field])
+        db.session.commit()
 
         flash(f"Updated {data['company']}.", "success")
         return redirect(url_for("applications.dashboard"))
@@ -171,18 +145,13 @@ def edit_application(application_id):
 @login_required
 def delete_application(application_id):
     application = get_application(application_id)
+    company = application.company
 
-    db = get_db()
     # Unlink inbox emails first so they don't point at a deleted row
-    db.execute(
-        "UPDATE job_emails SET application_id = NULL WHERE application_id = ? AND user_id = ?",
-        (application_id, g.user["id"]),
-    )
-    db.execute(
-        "DELETE FROM job_applications WHERE id = ? AND user_id = ?",
-        (application_id, g.user["id"]),
-    )
-    db.commit()
+    JobEmail.query.filter_by(application_id=application.id, user_id=g.user.id) \
+        .update({"application_id": None})
+    db.session.delete(application)
+    db.session.commit()
 
-    flash(f"Deleted {application['company']}.", "success")
+    flash(f"Deleted {company}.", "success")
     return redirect(url_for("applications.dashboard"))

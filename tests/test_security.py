@@ -1,21 +1,15 @@
 import pytest
 
-from conftest import add_application
+from conftest import add_application, make_app, wipe
 from jobtrack import create_app
 from jobtrack.config import TestConfig
-from jobtrack.db import init_db
 
 
 @pytest.fixture
 def csrf_client(tmp_path):
-    class Config(TestConfig):
-        DATABASE = str(tmp_path / "csrf.db")
-        WTF_CSRF_ENABLED = True
-
-    app = create_app(Config)
-    with app.app_context():
-        init_db()
-    return app.test_client()
+    app = make_app(tmp_path, WTF_CSRF_ENABLED=True)
+    yield app.test_client()
+    wipe(app)
 
 
 def test_post_without_csrf_token_is_rejected(csrf_client):

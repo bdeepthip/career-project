@@ -17,13 +17,32 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
 
 
+def database_url():
+    url = os.environ.get("DATABASE_URL")
+    if not url:
+        return "sqlite:///" + os.path.join(PROJECT_ROOT, "database.db")
+    return normalize_url(url)
+
+
+def normalize_url(url):
+    # Hosting providers often hand out "postgres://..." URLs; SQLAlchemy needs
+    # "postgresql+psycopg://..." to use the psycopg 3 driver.
+    if url.startswith("postgres://"):
+        url = "postgresql+psycopg://" + url[len("postgres://"):]
+    elif url.startswith("postgresql://"):
+        url = "postgresql+psycopg://" + url[len("postgresql://"):]
+    return url
+
+
 class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY")
 
-    # Keeps using your existing database.db in the project folder
-    DATABASE = os.environ.get(
-        "DATABASE", os.path.join(PROJECT_ROOT, "database.db")
-    )
+    # Which database to use. On your laptop, leave DATABASE_URL unset and
+    # JobTrack keeps using database.db in the project folder (SQLite).
+    # In production, set DATABASE_URL to your PostgreSQL address, e.g.
+    #   postgresql://user:password@host:5432/jobtrack
+    SQLALCHEMY_DATABASE_URI = database_url()
+    SQLALCHEMY_ENGINE_OPTIONS = {"pool_pre_ping": True}  # reconnect if the DB restarted
 
     # Session cookie safety
     SESSION_COOKIE_HTTPONLY = True      # JavaScript can't read the cookie

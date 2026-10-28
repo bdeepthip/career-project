@@ -8,11 +8,12 @@ from datetime import datetime
 from flask import (
     Blueprint, abort, flash, g, redirect, render_template, request, url_for
 )
+from sqlalchemy import func
 
 from .auth import login_required
-from .db import get_db
 from .email_parser import detect_status, match_application, should_update
 from .gmail_sync import fetch_job_emails
+from .models import JobApplication, JobEmail, db
 from .validation import clean
 
 bp = Blueprint("inbox", __name__)
@@ -29,23 +30,20 @@ def gmail_sync_allowed():
         owner
         and os.environ.get("EMAIL_APP_PASSWORD")
         and g.user is not None
-        and g.user["email"] == owner
+        and g.user.email == owner
     )
 
 
-def process_email(db, user_id, email_data):
+def process_email(user_id, email_data):
     """Save one email, match it to an application, and update that
     application's status if the email moves it forward.
 
     Returns a note describing what happened, or None if this email
-    was already processed (duplicate)."""
+    was already processed (duplicate). The caller commits."""
 
     message_id = email_data.get("message_id") or f"manual-{datetime.now().timestamp()}"
 
-    if db.execute(
-        "SELECT 1 FROM job_emails WHERE user_id = ? AND message_id = ?",
-        (user_id, message_id),
-    ).fetchone():
+    if JobEmail.query.filter_by(user_id=user_id, message_id=message_id).first():
         return None
 
     sender = email_data.get("sender", "")
@@ -53,67 +51,44 @@ def process_email(db, user_id, email_data):
     body = email_data.get("body", "")
 
     detected = detect_status(subject, body)
-    applications = db.execute(
-        "SELECT * FROM job_applications WHERE user_id = ?", (user_id,)
-    ).fetchall()
+    applications = JobApplication.query.filter_by(user_id=user_id).all()
     application = match_application(applications, sender, subject, body)
 
     if application is None:
         note = "No matching application found"
     elif detected is None:
         note = "Matched, but no status found in the email"
-    elif should_update(application["status"], detected):
-        db.execute(
-            "UPDATE job_applications SET status = ? WHERE id = ? AND user_id = ?",
-            (detected, application["id"], user_id),
-        )
-        note = f"Status changed: {application['status']} -> {detected}"
+    elif should_update(application.status, detected):
+        note = f"Status changed: {application.status} -> {detected}"
+        application.status = detected
     else:
-        note = f"No change (already {application['status']})"
+        note = f"No change (already {application.status})"
 
-    db.execute(
-        """
-        INSERT INTO job_emails
-        (user_id, message_id, sender, subject, body, received_at,
-         detected_status, application_id, update_note)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """,
-        (user_id, message_id, sender, subject, body,
-         email_data.get("received_at") or datetime.now().strftime("%Y-%m-%d %H:%M"),
-         detected, application["id"] if application else None, note),
-    )
+    db.session.add(JobEmail(
+        user_id=user_id,
+        message_id=message_id,
+        sender=sender,
+        subject=subject,
+        body=body,
+        received_at=email_data.get("received_at") or datetime.now().strftime("%Y-%m-%d %H:%M"),
+        detected_status=detected,
+        application_id=application.id if application else None,
+        update_note=note,
+    ))
+    # Make this email visible to the duplicate check above, even before
+    # the caller commits (a Gmail sync can contain the same email twice)
+    db.session.flush()
     return note
 
 
 @bp.route("/inbox")
 @login_required
 def inbox():
-    db = get_db()
-    user_id = g.user["id"]
+    emails = (JobEmail.query.filter_by(user_id=g.user.id)
+              .order_by(JobEmail.received_at.desc(), JobEmail.id.desc()).all())
 
-    emails = db.execute(
-        """
-        SELECT job_emails.*,
-               job_applications.company AS app_company,
-               job_applications.job_title AS app_title
-        FROM job_emails
-        LEFT JOIN job_applications
-            ON job_emails.application_id = job_applications.id
-           AND job_applications.user_id = job_emails.user_id
-        WHERE job_emails.user_id = ?
-        ORDER BY job_emails.received_at DESC, job_emails.id DESC
-        """,
-        (user_id,),
-    ).fetchall()
-
-    applications = db.execute(
-        """
-        SELECT id, company, job_title, status
-        FROM job_applications WHERE user_id = ?
-        ORDER BY company COLLATE NOCASE
-        """,
-        (user_id,),
-    ).fetchall()
+    applications = (JobApplication.query.filter_by(user_id=g.user.id)
+                    .order_by(func.lower(JobApplication.company)).all())
 
     return render_template(
         "inbox/inbox.html",
@@ -136,9 +111,8 @@ def inbox_add():
         flash("Paste at least a subject or the email text.", "error")
         return redirect(url_for("inbox.inbox"))
 
-    db = get_db()
-    note = process_email(db, g.user["id"], email_data)
-    db.commit()
+    note = process_email(g.user.id, email_data)
+    db.session.commit()
 
     flash(note or "This email was already processed.", "success")
     return redirect(url_for("inbox.inbox"))
@@ -159,15 +133,14 @@ def inbox_sync():
         flash("Couldn't reach Gmail. Check your internet connection and try again.", "error")
         return redirect(url_for("inbox.inbox"))
 
-    db = get_db()
     new_count = updated_count = 0
     for email_data in fetched:
-        note = process_email(db, g.user["id"], email_data)
+        note = process_email(g.user.id, email_data)
         if note is not None:
             new_count += 1
             if note.startswith("Status changed"):
                 updated_count += 1
-    db.commit()
+    db.session.commit()
 
     flash(f"Synced: {new_count} new email(s), {updated_count} application(s) updated.", "success")
     return redirect(url_for("inbox.inbox"))
@@ -176,35 +149,24 @@ def inbox_sync():
 @bp.route("/inbox/<int:email_id>/assign", methods=["POST"])
 @login_required
 def inbox_assign(email_id):
-    db = get_db()
-    user_id = g.user["id"]
-
-    email_row = db.execute(
-        "SELECT * FROM job_emails WHERE id = ? AND user_id = ?", (email_id, user_id)
-    ).fetchone()
-    application = db.execute(
-        "SELECT * FROM job_applications WHERE id = ? AND user_id = ?",
-        (request.form.get("application_id", type=int), user_id),
-    ).fetchone()
+    email_row = JobEmail.query.filter_by(id=email_id, user_id=g.user.id).first()
+    application = JobApplication.query.filter_by(
+        id=request.form.get("application_id", type=int), user_id=g.user.id
+    ).first()
 
     if email_row is None or application is None:
         abort(404)
 
-    detected = email_row["detected_status"]
-    if should_update(application["status"], detected):
-        db.execute(
-            "UPDATE job_applications SET status = ? WHERE id = ? AND user_id = ?",
-            (detected, application["id"], user_id),
-        )
-        note = f"Status changed: {application['status']} -> {detected}"
+    detected = email_row.detected_status
+    if should_update(application.status, detected):
+        note = f"Status changed: {application.status} -> {detected}"
+        application.status = detected
     else:
-        note = f"Linked manually (status stays {application['status']})"
+        note = f"Linked manually (status stays {application.status})"
 
-    db.execute(
-        "UPDATE job_emails SET application_id = ?, update_note = ? WHERE id = ? AND user_id = ?",
-        (application["id"], note, email_id, user_id),
-    )
-    db.commit()
+    email_row.application_id = application.id
+    email_row.update_note = note
+    db.session.commit()
 
     flash(note, "success")
     return redirect(url_for("inbox.inbox"))
@@ -213,7 +175,6 @@ def inbox_assign(email_id):
 @bp.route("/inbox/<int:email_id>/delete", methods=["POST"])
 @login_required
 def inbox_delete(email_id):
-    db = get_db()
-    db.execute("DELETE FROM job_emails WHERE id = ? AND user_id = ?", (email_id, g.user["id"]))
-    db.commit()
+    JobEmail.query.filter_by(id=email_id, user_id=g.user.id).delete()
+    db.session.commit()
     return redirect(url_for("inbox.inbox"))

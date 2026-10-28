@@ -5,7 +5,9 @@ import pytest
 
 from conftest import add_application
 from jobtrack import mailer
-from jobtrack.db import get_db
+from sqlalchemy import text
+
+from jobtrack.models import db
 
 
 @pytest.fixture(autouse=True)
@@ -24,7 +26,9 @@ def reset_link_from_email():
 def count_rows(app, table, user_id):
     column = "id" if table == "users" else "user_id"
     with app.app_context():
-        return get_db().execute(f"SELECT COUNT(*) FROM {table} WHERE {column} = ?", (user_id,)).fetchone()[0]
+        return db.session.execute(
+            text(f"SELECT COUNT(*) FROM {table} WHERE {column} = :uid"), {"uid": user_id}
+        ).scalar()
 
 
 # ---------- Forgot / reset password ----------

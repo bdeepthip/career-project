@@ -7,11 +7,9 @@ def paste(client, sender, subject, body):
 
 
 def status_of(app, company):
-    from jobtrack.db import get_db
+    from jobtrack.models import JobApplication
     with app.app_context():
-        return get_db().execute(
-            "SELECT status FROM job_applications WHERE company = ?", (company,)
-        ).fetchone()[0]
+        return JobApplication.query.filter_by(company=company).one().status
 
 
 def test_interview_email_updates_status(app, client, logged_in):
