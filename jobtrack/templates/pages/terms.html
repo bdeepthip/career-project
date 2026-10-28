@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Terms{% endblock %}
+
+{% block content %}
+<article class="legal-page">
+
+<h1>Terms of Use</h1>
+<p class="muted">Last updated {{ last_updated }}</p>
+
+<p>By creating a JobTrack account you agree to these terms. They are short on purpose.</p>
+
+<h2>The service</h2>
+<p>JobTrack is a free tool, currently in beta, for organizing your job search. Features may
+change, and the service may occasionally be unavailable. Match Scores and status updates
+from emails are automatic estimates; always check important details yourself.</p>
+
+<h2>Your account</h2>
+<ul>
+    <li>Give a real email address and keep your password private.</li>
+    <li>You're responsible for what happens in your account.</li>
+    <li>Your data belongs to you. You can export or delete it at any time from Account.</li>
+</ul>
+
+<h2>Acceptable use</h2>
+<p>Don't use JobTrack to break the law, send spam, try to access other people's accounts or
+data, overload or attack the service, or upload harmful content. We may suspend accounts
+that do.</p>
+
+<h2>No warranty</h2>
+<p>JobTrack is provided "as is", without guarantees of any kind. Keep your own copies of
+anything important (Account → Download my data). To the extent the law allows, JobTrack is
+not liable for lost data, missed opportunities, or other losses from using the service.</p>
+
+<h2>Ending</h2>
+<p>You can stop using JobTrack and delete your account at any time. We may end the beta or
+the service; if we do, we'll give account holders notice by email so they can export
+their data.</p>
+
+<h2>Changes</h2>
+<p>We may update these terms. If a change matters, we'll update the date above and email
+account holders. Continuing to use JobTrack after that means you accept the new terms.</p>
+
+<h2>Contact</h2>
+<p>{% if contact_email %}<a href="mailto:{{ contact_email }}">{{ contact_email }}</a>
+{% else %}Use the contact link in the footer.{% endif %}</p>
+
+</article>
+{% endblock %}

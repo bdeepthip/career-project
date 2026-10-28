@@ -26,7 +26,7 @@
         <p><strong>{{ "Skills to learn" if not has_skills else "Missing" }}:</strong> {{ missing | join(", ") }}</p>
 
         <button class="btn" type="button"
-                onclick="document.getElementById('learning-dialog').showModal()">
+                data-open-dialog="learning-dialog">
             See how to learn missing skills
         </button>
     {% endif %}

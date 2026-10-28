@@ -34,6 +34,9 @@ match a job, and let job emails update your application statuses.
 | Match Score logic | `jobtrack/matching.py` |
 | Inbox routes | `jobtrack/inbox.py` |
 | Forwarding addresses and the incoming-email webhook | `jobtrack/inbound.py` |
+| Privacy Policy and Terms pages | `jobtrack/pages.py` |
+| CSRF and rate-limit setup | `jobtrack/extensions.py` |
+| Deployment (Render) | `render.yaml`, `LAUNCH.md` |
 | Email status detection and matching | `jobtrack/email_parser.py` |
 | Form validation | `jobtrack/validation.py` |
 
@@ -74,6 +77,12 @@ SendGrid form posts. Details:
 - Password reset links are signed, expire after 1 hour, and stop
   working once used; the reset page never reveals who has an account
 - Changing a password signs out every other device
+- Rate limits on log-in, sign-up and password reset: per network, and
+  per account so a password can't be guessed from many addresses
+- Content-Security-Policy allows only JobTrack's own scripts and styles
+  (no inline JavaScript anywhere)
+- In production: HTTPS only (HSTS), secure cookies, and the app refuses
+  to start with a short SECRET_KEY, a SQLite database, or no email server
 
 ## Run it locally
 
@@ -107,6 +116,13 @@ Every change to the tables is a versioned migration in
 to the same structure safely. A `database.db` created before
 migrations existed is upgraded in place, keeping all its data.
 
+## Going live
+
+`LAUNCH.md` walks through putting JobTrack online step by step: domain,
+hosting (Render), database (Neon), sending and receiving email, the
+live-site checklist, and inviting beta testers. It costs about $7 a
+month plus the domain.
+
 ## Tests
 
 ```bash
@@ -115,8 +131,8 @@ python -m pytest
 TEST_DATABASE_URL=postgresql://user:pass@localhost/jobtrack_test python -m pytest
 ```
 
-CI runs every test on both SQLite and PostgreSQL. 101 tests cover accounts, password reset, data export and deletion, data privacy between users, CSRF, input
-validation, Match Score, email parsing, the Inbox and forwarded email.
+CI runs every test on both SQLite and PostgreSQL. 117 tests cover accounts, password reset, data export and deletion, data privacy between users, CSRF, input
+validation, Match Score, email parsing, the Inbox, forwarded email, rate limits and production safety checks.
 
 ## Roadmap
 
@@ -124,5 +140,5 @@ validation, Match Score, email parsing, the Inbox and forwarded email.
 2. Accounts: password reset, account deletion, data export (done)
 3. PostgreSQL with migrations (done)
 4. A personal email forwarding address for every user (done)
-5. Public beta: deployment, domain, privacy policy
+5. Public beta: deployment, domain, privacy policy (code ready; see LAUNCH.md)
 6. Real job listings and a resume builder

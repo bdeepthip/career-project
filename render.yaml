@@ -1,0 +1,42 @@
+# Render Blueprint: Render reads this file and creates the web service.
+# Secrets are NOT stored here: Render asks for every "sync: false" value
+# when you create the Blueprint. See LAUNCH.md for the full walkthrough.
+services:
+  - type: web
+    name: jobtrack
+    runtime: python
+    plan: starter            # always on ($7/month). "free" works for testing but sleeps after 15 min.
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    # Runs before each new version goes live: apply migrations, add sample jobs
+    preDeployCommand: flask --app app init-db && flask --app app seed
+    startCommand: gunicorn app:app --workers 1 --threads 8 --timeout 60 --access-logfile -
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL          # from Neon: Connection string
+        sync: false
+      - key: MAIL_SERVER
+        value: smtp.resend.com
+      - key: MAIL_PORT
+        value: "587"
+      - key: MAIL_USERNAME
+        value: resend
+      - key: MAIL_PASSWORD         # your Resend API key
+        sync: false
+      - key: MAIL_FROM             # e.g. JobTrack <no-reply@yourdomain.com>
+        sync: false
+      - key: CONTACT_EMAIL
+        sync: false
+      - key: INBOUND_DOMAIN        # e.g. in.yourdomain.com
+        sync: false
+      - key: INBOUND_WEBHOOK_SECRET
+        generateValue: true
+      - key: BETA_INVITE_CODE      # leave empty for open sign-up
+        sync: false
+      - key: FEEDBACK_URL
+        sync: false

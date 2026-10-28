@@ -3,20 +3,28 @@ Accounts: register, log in, log out, and the login_required helper.
 """
 
 import functools
+import hmac
 from urllib.parse import urlparse
 
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, session, url_for
+    Blueprint, current_app, flash, g, redirect, render_template, request, session, url_for
 )
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from .extensions import limiter
 from .mailer import send_email
 from .models import User, db
 from .tokens import make_reset_token, password_fingerprint, read_reset_token
 from .validation import MIN_PASSWORD_LENGTH, clean, is_valid_email
 
 bp = Blueprint("auth", __name__)
+
+
+def submitted_email():
+    """Rate-limit key: the email typed into the form, so one account can't be
+    guessed at from many addresses, and one inbox can't be flooded."""
+    return "email:" + (request.form.get("email") or "").strip().lower()[:254]
 
 
 @bp.before_app_request
@@ -79,6 +87,7 @@ def home():
 
 
 @bp.route("/register", methods=["GET", "POST"])
+@limiter.limit("20 per hour", methods=["POST"])
 def register():
 
     if g.user:
@@ -89,8 +98,14 @@ def register():
         email = clean(request.form, "email", 254).lower()
         password = request.form.get("password") or ""
 
+        invite_code = current_app.config.get("BETA_INVITE_CODE")
+        typed_code = (request.form.get("invite_code") or "").strip()
+
         error = None
-        if not name or not email or not password:
+        if invite_code and not hmac.compare_digest(typed_code.lower().encode(),
+                                                   invite_code.lower().encode()):
+            error = "JobTrack is in private beta. Enter the invite code you were given."
+        elif not name or not email or not password:
             error = "All fields are required."
         elif not is_valid_email(email):
             error = "Enter a valid email address."
@@ -112,12 +127,15 @@ def register():
                 return redirect(url_for("auth.login"))
 
         flash(error, "error")
-        return render_template("auth/register.html", name=name, email=email), 400
+        return render_template("auth/register.html", name=name, email=email,
+                               invite_code=typed_code), 400
 
     return render_template("auth/register.html")
 
 
 @bp.route("/login", methods=["GET", "POST"])
+@limiter.limit("30 per minute;300 per hour", methods=["POST"])
+@limiter.limit("10 per 15 minutes", methods=["POST"], key_func=submitted_email)
 def login():
 
     if g.user:
@@ -153,6 +171,8 @@ def logout():
 
 
 @bp.route("/forgot-password", methods=["GET", "POST"])
+@limiter.limit("20 per hour", methods=["POST"])
+@limiter.limit("3 per hour", methods=["POST"], key_func=submitted_email)
 def forgot_password():
 
     if request.method == "POST":
@@ -195,6 +215,7 @@ def _user_for_token(token):
 
 
 @bp.route("/reset-password/<token>", methods=["GET", "POST"])
+@limiter.limit("20 per hour", methods=["POST"])
 def reset_password(token):
     user = _user_for_token(token)
 

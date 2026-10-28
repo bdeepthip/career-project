@@ -30,6 +30,7 @@ from email.utils import getaddresses
 from flask import Blueprint, abort, current_app, g, jsonify, redirect, request, url_for, flash
 
 from .auth import login_required
+from .extensions import limiter
 from .inbox import inbound_enabled, process_email
 from .models import JobEmail, User, db, new_inbound_token
 
@@ -164,6 +165,7 @@ def allow_bigger_bodies():
 
 
 @bp.route("/inbound/email", methods=["POST"])
+@limiter.limit("600 per minute")
 def receive():
     if not inbound_enabled():
         abort(404)
