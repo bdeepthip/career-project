@@ -1,26 +1,55 @@
 """
-Shared test setup. Each test gets a brand-new temporary database,
+Shared test setup. Each test gets a brand-new empty database,
 so tests never touch your real database.db.
+
+By default that is a temporary SQLite file. To run the same tests
+against PostgreSQL, point TEST_DATABASE_URL at an EMPTY database
+that may be wiped, e.g.
+    TEST_DATABASE_URL=postgresql://postgres:postgres@localhost/jobtrack_test
 """
 
+import os
+
 import pytest
+from sqlalchemy import text
 
 from jobtrack import create_app
-from jobtrack.config import TestConfig
-from jobtrack.db import get_db, init_db
+from jobtrack.config import TestConfig, normalize_url
+from jobtrack.db import init_db
+from jobtrack.models import db
 from jobtrack.seed_data import seed
+
+
+def make_app(tmp_path, **settings):
+    url = os.environ.get("TEST_DATABASE_URL")
+    settings["SQLALCHEMY_DATABASE_URI"] = (
+        normalize_url(url) if url else f"sqlite:///{tmp_path / 'test.db'}"
+    )
+    config = type("Config", (TestConfig,), settings)
+    app = create_app(config)
+    with app.app_context():
+        init_db()  # runs the real migrations, the same way production does
+    return app
+
+
+def wipe(app):
+    """Leave the database empty for the next test (matters on PostgreSQL;
+    a SQLite temp file is simply thrown away)."""
+    with app.app_context():
+        db.session.remove()
+        db.drop_all()
+        db.session.execute(text("DROP TABLE IF EXISTS alembic_version"))
+        db.session.commit()
+        db.engine.dispose()
 
 
 @pytest.fixture
 def app(tmp_path):
-    class Config(TestConfig):
-        DATABASE = str(tmp_path / "test.db")
-
-    app = create_app(Config)
+    app = make_app(tmp_path)
     with app.app_context():
-        init_db()
-        seed(get_db())
+        seed()
     yield app
+    wipe(app)
 
 
 @pytest.fixture

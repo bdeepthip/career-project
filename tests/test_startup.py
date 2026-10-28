@@ -18,7 +18,7 @@ def run_startup(tmp_path, env_text):
     if env_text is not None:
         (tmp_path / ".env").write_text(env_text)
 
-    env = {k: v for k, v in os.environ.items() if k not in ("SECRET_KEY", "DATABASE")}
+    env = {k: v for k, v in os.environ.items() if k not in ("SECRET_KEY", "DATABASE_URL")}
     return subprocess.run(
         [sys.executable, "-c", "import app; print('KEY=' + app.app.secret_key)"],
         cwd=tmp_path, env=env, capture_output=True, text=True,

@@ -4,6 +4,10 @@ Match Score: compares a user's profile skills with a job's skills.
 
 import re
 
+from sqlalchemy import func
+
+from .models import LearningResource, Skill, db
+
 # Skills the Match Checker looks for in a pasted job description.
 # Single-letter or common-word skills (like "R" or "Go") are left out
 # because they create false matches in normal English text.
@@ -37,12 +41,11 @@ def parse_skills(skills_text):
     return skills
 
 
-def get_user_skills(db, user_id):
+def get_user_skills(user_id):
+    """The user's profile skills as a set of lowercase names."""
     return {
-        row["skill_name"].strip().lower()
-        for row in db.execute(
-            "SELECT skill_name FROM skills WHERE user_id = ?", (user_id,)
-        )
+        name.strip().lower()
+        for (name,) in db.session.query(Skill.skill_name).filter_by(user_id=user_id)
     }
 
 
@@ -70,20 +73,18 @@ def extract_skills(text):
     return ", ".join(found)
 
 
-def build_learning_plan(db, missing):
+def build_learning_plan(missing):
     """A course for each missing skill. Returns (plan, total_hours)."""
 
     resources = {}
     if missing:
-        placeholders = ",".join("?" * len(missing))
-        for row in db.execute(
-            f"SELECT * FROM learning_resources WHERE LOWER(skill_name) IN ({placeholders})",
-            [skill.lower() for skill in missing],
-        ):
-            resources[row["skill_name"].lower()] = row
+        rows = LearningResource.query.filter(
+            func.lower(LearningResource.skill_name).in_([s.lower() for s in missing])
+        )
+        resources = {row.skill_name.lower(): row for row in rows}
 
     plan = [{"skill": s, "resource": resources.get(s.lower())} for s in missing]
     total_hours = sum(
-        item["resource"]["estimated_hours"] or 0 for item in plan if item["resource"]
+        item["resource"].estimated_hours or 0 for item in plan if item["resource"]
     )
     return plan, total_hours

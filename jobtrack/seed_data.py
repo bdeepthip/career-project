@@ -5,6 +5,9 @@ The jobs are SAMPLE listings (example.com links). The Jobs page labels
 them as samples until real job listings are added (roadmap phase 6).
 """
 
+from .models import Job, LearningResource, db
+
+
 SAMPLE_JOBS = [
     ("TechNova", "Python Backend Developer", "Software Development",
      "Philadelphia, PA", "Entry Level", "Python, Flask, SQL, REST API, Git",
@@ -70,33 +73,25 @@ LEARNING_RESOURCES = [
 ]
 
 
-def seed(db):
+def seed():
     """Insert sample data. Skips anything already there.
     Returns (jobs_added, resources_added)."""
 
     jobs_added = 0
-    if db.execute("SELECT COUNT(*) FROM jobs").fetchone()[0] == 0:
-        db.executemany(
-            """
-            INSERT INTO jobs
-            (company, title, domain, location, experience_level,
-             required_skills, description, job_url, posted_date)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            SAMPLE_JOBS,
-        )
+    if db.session.query(Job.id).first() is None:
+        fields = ("company", "title", "domain", "location", "experience_level",
+                  "required_skills", "description", "job_url", "posted_date")
+        db.session.add_all(Job(**dict(zip(fields, row))) for row in SAMPLE_JOBS)
         jobs_added = len(SAMPLE_JOBS)
 
-    before = db.execute("SELECT COUNT(*) FROM learning_resources").fetchone()[0]
-    db.executemany(
-        """
-        INSERT OR IGNORE INTO learning_resources
-        (skill_name, resource_name, provider, url, estimated_hours, cost)
-        VALUES (?, ?, ?, ?, ?, ?)
-        """,
-        LEARNING_RESOURCES,
-    )
-    after = db.execute("SELECT COUNT(*) FROM learning_resources").fetchone()[0]
+    existing = {name for (name,) in db.session.query(LearningResource.skill_name)}
+    resources_added = 0
+    for skill, course, provider, url, hours, cost in LEARNING_RESOURCES:
+        if skill not in existing:
+            db.session.add(LearningResource(
+                skill_name=skill, resource_name=course, provider=provider,
+                url=url, estimated_hours=hours, cost=cost))
+            resources_added += 1
 
-    db.commit()
-    return jobs_added, after - before
+    db.session.commit()
+    return jobs_added, resources_added
