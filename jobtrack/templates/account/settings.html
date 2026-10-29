@@ -21,6 +21,35 @@
 </section>
 
 
+{% if phone_login_enabled %}
+<section class="panel" id="phone">
+    <h2>Phone number</h2>
+    {% if g.user.phone %}
+        <p>
+            <strong>{{ display_phone(g.user.phone) }}</strong> is verified.
+            You can log in with a text code instead of your password.
+        </p>
+        <form method="POST" action="{{ url_for('phone.remove_phone') }}" class="phone-remove"
+              data-confirm="Remove this number? You'll log in with your email and password.">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-small btn-danger-quiet" type="submit">Remove number</button>
+        </form>
+    {% else %}
+        <p class="muted">Add your mobile number to log in with a text code, no password needed.
+            We text you once to check it's yours.</p>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('phone.add_phone') }}" class="inline-add">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label class="sr-only" for="phone-number">Mobile number</label>
+        <input type="tel" id="phone-number" name="phone" placeholder="(215) 555-0123"
+               autocomplete="tel-national" inputmode="tel" maxlength="40" required>
+        <button class="btn" type="submit">{{ "Change number" if g.user.phone else "Text me a code" }}</button>
+    </form>
+</section>
+{% endif %}
+
+
 <section class="panel">
     <h2>Change password</h2>
     <p class="muted">Changing your password signs you out on all other devices.</p>

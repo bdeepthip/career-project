@@ -31,6 +31,14 @@ CONTENT_SECURITY_POLICY = "; ".join([
 ])
 
 
+MB = 1024 * 1024
+UPLOAD_LIMITS = {
+    "inbound.receive": 25 * MB,          # forwarded emails can carry attachments
+    "profile.upload_resume": 6 * MB,     # resume PDFs (5 MB max, plus form overhead)
+    "apply.easy_apply": 6 * MB,
+}
+
+
 def create_app(config_class=None):
     app = Flask(__name__)
     app.config.from_object(config_class or get_config())
@@ -54,6 +62,16 @@ def create_app(config_class=None):
         logging.basicConfig(level=logging.INFO,
                             format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
+    # Bigger uploads for a few routes. Registered BEFORE CSRF protection,
+    # because the CSRF check reads the form and would refuse a 3 MB resume
+    # under the normal 1 MB limit.
+    @app.before_request
+    def allow_bigger_uploads():
+        from flask import request
+        limit = UPLOAD_LIMITS.get(request.endpoint)
+        if limit:
+            request.max_content_length = limit
+
     db.init_app(app)
     csrf.init_app(app)
     limiter.init_app(app)
@@ -66,6 +84,12 @@ def create_app(config_class=None):
     from .account import bp as account_bp
     from .inbound import bp as inbound_bp
     from .pages import bp as pages_bp
+    from .activity import bp as activity_bp
+    from .phone import bp as phone_bp
+    from .messages import bp as messages_bp
+    from .notifications import bp as notifications_bp
+    from .employer import bp as employer_bp
+    from .apply import bp as apply_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(applications_bp)
@@ -75,15 +99,28 @@ def create_app(config_class=None):
     app.register_blueprint(account_bp)
     app.register_blueprint(inbound_bp)
     app.register_blueprint(pages_bp)
+    app.register_blueprint(activity_bp)
+    app.register_blueprint(phone_bp)
+    app.register_blueprint(messages_bp)
+    app.register_blueprint(notifications_bp)
+    app.register_blueprint(employer_bp)
+    app.register_blueprint(apply_bp)
     # Email services can't send a CSRF token; the webhook checks its own secret
     csrf.exempt("jobtrack.inbound.receive")
 
     @app.context_processor
     def site_settings():
+        from .daily import line_for
         return {
             "contact_email": app.config.get("CONTACT_EMAIL"),
             "feedback_url": app.config.get("FEEDBACK_URL"),
+            "daily_line": line_for(),
         }
+
+    from .timefmt import month_label, time_ago, time_ago_utc
+    app.add_template_filter(time_ago, "time_ago")
+    app.add_template_filter(time_ago_utc, "time_ago_utc")
+    app.add_template_filter(month_label, "month_label")
 
     @app.route("/healthz")
     @limiter.exempt

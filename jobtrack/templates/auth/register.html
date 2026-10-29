@@ -1,61 +1,69 @@
-{% extends "base.html" %}
+{% extends "auth/_layout.html" %}
 
 {% block title %}Create account{% endblock %}
-{% block main_class %}auth-page{% endblock %}
+{% block auth_heading %}Start your search{% endblock %}
+{% block auth_lead %}Track every application, see how you match each job, and let job emails update your status.{% endblock %}
 
-{% block content %}
+{% block auth_form %}
+<form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-<div class="auth-card">
+    {% set kind = account_type or request.args.get("as") or "seeker" %}
+    <fieldset class="account-type">
+        <legend>I'm here to</legend>
+        <label class="type-option">
+            <input type="radio" name="account_type" value="seeker" {{ "checked" if kind != "employer" }}>
+            <span><strong>Find a job</strong><small>Track applications and Easy Apply</small></span>
+        </label>
+        <label class="type-option">
+            <input type="radio" name="account_type" value="employer" {{ "checked" if kind == "employer" }}>
+            <span><strong>Hire</strong><small>Post jobs and review applicants</small></span>
+        </label>
+    </fieldset>
 
-    <div class="auth-logo">
-        <h1>Create account</h1>
-        <p>Start organizing your job search today.</p>
+    <div class="form-group employer-only">
+        <label for="company">Company you're hiring for</label>
+        <input type="text" id="company" name="company" value="{{ company or '' }}"
+               autocomplete="organization" maxlength="120" placeholder="Example: Northwind Health">
     </div>
 
-    <form method="POST">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-        <div class="form-group">
-            <label for="name">Full name</label>
-            <input type="text" id="name" name="name" value="{{ name or '' }}"
-                   placeholder="Your name" autocomplete="name" maxlength="100" required autofocus>
-        </div>
-
-        <div class="form-group">
-            <label for="email">Email address</label>
-            <input type="email" id="email" name="email" value="{{ email or '' }}"
-                   placeholder="you@example.com" autocomplete="email" required>
-        </div>
-
-        <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password"
-                   placeholder="At least 8 characters" minlength="8"
-                   autocomplete="new-password" required>
-        </div>
-
-        {% if config.BETA_INVITE_CODE %}
-        <div class="form-group">
-            <label for="invite_code">Invite code</label>
-            <input type="text" id="invite_code" name="invite_code" value="{{ invite_code or '' }}"
-                   placeholder="From your beta invitation" autocomplete="off" maxlength="100" required>
-        </div>
-        {% endif %}
-
-        <button class="btn" type="submit">Create account</button>
-
-        <p class="form-legal">
-            By creating an account you agree to the
-            <a href="{{ url_for('pages.terms') }}">Terms</a> and
-            <a href="{{ url_for('pages.privacy') }}">Privacy Policy</a>.
-        </p>
-    </form>
-
-    <div class="auth-footer">
-        Already have an account?
-        <a href="{{ url_for('auth.login') }}">Log in</a>
+    <div class="form-group">
+        <label for="name">Full name</label>
+        <input type="text" id="name" name="name" value="{{ name or '' }}"
+               autocomplete="name" maxlength="100" required autofocus>
     </div>
 
-</div>
+    <div class="form-group">
+        <label for="email">Email address</label>
+        <input type="email" id="email" name="email" value="{{ email or '' }}"
+               placeholder="you@example.com" autocomplete="email" required>
+    </div>
 
+    <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password"
+               placeholder="At least 8 characters" minlength="8"
+               autocomplete="new-password" required>
+    </div>
+
+    {% if config.BETA_INVITE_CODE %}
+    <div class="form-group">
+        <label for="invite_code">Invite code</label>
+        <input type="text" id="invite_code" name="invite_code" value="{{ invite_code or '' }}"
+               placeholder="From your beta invitation" autocomplete="off" maxlength="100" required>
+    </div>
+    {% endif %}
+
+    <button class="btn btn-block" type="submit">Create account</button>
+
+    <p class="form-legal">
+        By creating an account you agree to the
+        <a href="{{ url_for('pages.terms') }}">Terms</a> and
+        <a href="{{ url_for('pages.privacy') }}">Privacy Policy</a>.
+    </p>
+</form>
+{% endblock %}
+
+{% block auth_switch %}
+Already have an account? <a href="{{ url_for('auth.login') }}">Log in</a>
 {% endblock %}

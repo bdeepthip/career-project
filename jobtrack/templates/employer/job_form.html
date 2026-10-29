@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}{{ "Post a job" if mode == "new" else "Edit job" }}{% endblock %}
+
+{% block content %}
+<a class="back-link" href="{{ url_for('employer.posts') }}">← Your job posts</a>
+<h1 class="page-title">{{ "Post a job" if mode == "new" else "Edit job" }}</h1>
+
+<form method="POST" class="panel job-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="form-row">
+        <div class="form-group">
+            <label for="title">Job title</label>
+            <input type="text" id="title" name="title" maxlength="120" required
+                   value="{{ job['title'] or '' }}" placeholder="Example: Data Engineer I">
+        </div>
+        <div class="form-group">
+            <label for="company">Company</label>
+            <input type="text" id="company" name="company" maxlength="120" required
+                   value="{{ job['company'] or '' }}">
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label for="location">Location</label>
+            <input type="text" id="location" name="location" maxlength="120" required
+                   value="{{ job['location'] or '' }}" placeholder="Example: Philadelphia, PA (hybrid)">
+        </div>
+        <div class="form-group">
+            <label for="experience_level">Experience level</label>
+            <select id="experience_level" name="experience_level">
+                <option value="">Any</option>
+                {% for level in levels %}
+                    <option value="{{ level }}" {{ 'selected' if job['experience_level'] == level }}>{{ level }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label for="domain">Field</label>
+            <select id="domain" name="domain">
+                <option value="">Other</option>
+                {% for d in domains %}
+                    <option value="{{ d }}" {{ 'selected' if job['domain'] == d }}>{{ d }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="required_skills">Required skills, separated by commas</label>
+            <input type="text" id="required_skills" name="required_skills" maxlength="600"
+                   value="{{ job['required_skills'] or '' }}" placeholder="Python, SQL, Airflow">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="description">Description</label>
+        <textarea id="description" name="description" rows="10" maxlength="8000" required
+                  placeholder="What the person will do, what you need, how you work, salary range, and whether you sponsor visas.">{{ job['description'] or '' }}</textarea>
+        <p class="field-hint">Say whether you sponsor work visas. Many GAJ users need to know.</p>
+    </div>
+
+    <div class="form-actions">
+        <button class="btn" type="submit">{{ "Post job" if mode == "new" else "Save changes" }}</button>
+        <a class="btn btn-quiet" href="{{ url_for('employer.posts') }}">Cancel</a>
+    </div>
+</form>
+{% endblock %}

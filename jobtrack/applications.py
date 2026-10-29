@@ -36,6 +36,8 @@ def get_application(application_id):
 @bp.route("/dashboard")
 @login_required
 def dashboard():
+    if g.user.is_employer:
+        return redirect(url_for("employer.posts"))
     search = request.args.get("search", "").strip()[:100]
     status_filter = request.args.get("status", "").strip()
     if status_filter not in STATUSES:
@@ -71,6 +73,7 @@ def dashboard():
         statuses=STATUSES,
         search=search,
         status_filter=status_filter,
+        today_label=date.today().strftime("%A, %B %-d"),
     )
 
 

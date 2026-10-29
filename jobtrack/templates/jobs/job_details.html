@@ -16,7 +16,7 @@
     <div class="job-meta">
         <span>{{ job["location"] }}</span>
         <span>{{ job["experience_level"] }}</span>
-        <span>Posted {{ job["posted_date"] }}</span>
+        <span>Posted {{ job["posted_date"] | time_ago }}</span>
     </div>
 
     <hr>
@@ -33,15 +33,58 @@
 
     {% include "jobs/_match_box.html" %}
 
-    <div class="job-actions">
-        {% if job["job_url"] %}
-            <a href="{{ job['job_url'] }}" target="_blank" rel="noopener noreferrer" class="btn">Apply now</a>
+    {% if job.easy_apply %}
+        <div class="apply-box">
+            {% if submission %}
+                <p class="apply-status">
+                    You applied {{ submission.created_at | time_ago_utc }} with Easy Apply.
+                    Status: <span class="status status-{{ {'New': 'applied', 'Reviewing': 'applied', 'Interview': 'interview', 'Offer': 'offer', 'Rejected': 'rejected'}[submission.status] }}">{{ "Sent" if submission.status == "New" else submission.status }}</span>
+                </p>
+                <div class="job-actions">
+                    <a class="btn btn-quiet" href="{{ url_for('apply.sent_resume', job_id=job.id) }}">Resume you sent</a>
+                    {% if submission.status not in ("Offer", "Rejected") %}
+                        <form method="POST" action="{{ url_for('apply.withdraw', job_id=job.id) }}"
+                              data-confirm="Withdraw your application? The employer will no longer see it.">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button class="btn btn-danger-quiet" type="submit">Withdraw application</button>
+                        </form>
+                    {% endif %}
+                </div>
+            {% elif not job.is_open %}
+                <p class="apply-status">This job is closed and no longer takes applications.</p>
+            {% elif g.user.is_employer %}
+                <p class="apply-status">Job seekers can Easy Apply to this job.</p>
+            {% else %}
+                <p class="apply-status">Posted on GAJ. Apply in one step with your profile and resume.</p>
+                <div class="job-actions">
+                    <a class="btn btn-large" href="{{ url_for('apply.easy_apply', job_id=job.id) }}">Easy Apply</a>
+                </div>
+            {% endif %}
+        </div>
+
+        {% if not g.user.is_employer and job.posted_by_user_id != g.user.id %}
+        <details class="report-job">
+            <summary>Report this job</summary>
+            <form method="POST" action="{{ url_for('apply.report_job', job_id=job.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <label for="report-reason">What's wrong with it? Fake jobs, requests for money or
+                    personal documents, and scams are not allowed.</label>
+                <textarea id="report-reason" name="reason" rows="2" maxlength="1000"></textarea>
+                <button class="btn btn-small btn-danger" type="submit">Send report</button>
+            </form>
+        </details>
         {% endif %}
-        <a href="{{ url_for('applications.add_application',
-                            company=job['company'], job_title=job['title'],
-                            location=job['location'], job_url=job['job_url']) }}"
-           class="btn btn-secondary">Track application</a>
-    </div>
+    {% else %}
+        <div class="job-actions">
+            {% if job["job_url"] %}
+                <a href="{{ job['job_url'] }}" target="_blank" rel="noopener noreferrer" class="btn">Apply on company site</a>
+            {% endif %}
+            <a href="{{ url_for('applications.add_application',
+                                company=job['company'], job_title=job['title'],
+                                location=job['location'], job_url=job['job_url']) }}"
+               class="btn btn-secondary">Track application</a>
+        </div>
+    {% endif %}
 
 </article>
 

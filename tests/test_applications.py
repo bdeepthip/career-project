@@ -13,8 +13,8 @@ def test_dashboard_counts(client, logged_in):
     add_application(client, company="B", status="Interview")
     add_application(client, company="C", status="Interview")
     page = client.get("/dashboard").get_data(as_text=True)
-    assert "<p>3</p>" in page   # total
-    assert "<p>2</p>" in page   # interviews
+    assert '<span class="status-count">3</span>' in page   # total
+    assert '<span class="status-count">2</span>' in page   # interviews
 
 
 def test_filter_by_status(client, logged_in):

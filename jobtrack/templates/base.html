@@ -1,77 +1,127 @@
+{% from "_icons.html" import icon %}
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{% block title %}Get A Job{% endblock %} | GAJ</title>
+    <link rel="preload" href="{{ url_for('static', filename='fonts/bricolage-grotesque.woff2') }}"
+          as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
-<body>
-
 {#
-    Every page "extends" this file and fills in the blocks below.
-    Change the navbar here once and every page gets it.
+    Every page "extends" this file. Logged-in pages get the sidebar;
+    public pages (home, log in, sign up, privacy) get a simple top bar.
 #}
 
-<nav class="navbar">
-
-    <a class="brand" href="{{ url_for('auth.home') }}">GAJ</a>
-
-    <div class="nav-links">
-        {% if g.user %}
-            {% set ep = request.endpoint or "" %}
-            <a href="{{ url_for('applications.dashboard') }}"
-               class="{{ 'active' if ep.startswith('applications.') }}">Dashboard</a>
-            <a href="{{ url_for('jobs.jobs') }}"
-               class="{{ 'active' if ep in ('jobs.jobs', 'jobs.job_details') }}">Jobs</a>
-            <a href="{{ url_for('jobs.match_checker') }}"
-               class="{{ 'active' if ep == 'jobs.match_checker' }}">Match Checker</a>
-            <a href="{{ url_for('inbox.inbox') }}"
-               class="{{ 'active' if ep.startswith('inbox.') }}">Inbox</a>
-            <a href="{{ url_for('profile.profile') }}"
-               class="{{ 'active' if ep.startswith('profile.') }}">Profile</a>
-            <a href="{{ url_for('account.settings') }}"
-               class="{{ 'active' if ep.startswith('account.') }}">Account</a>
-
-            <form method="POST" action="{{ url_for('auth.logout') }}" class="inline-form">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="nav-button">Log out</button>
-            </form>
-        {% else %}
-            <a href="{{ url_for('auth.login') }}">Log in</a>
-            <a href="{{ url_for('auth.register') }}">Create account</a>
-        {% endif %}
-    </div>
-
-</nav>
-
-
-{% block before_container %}{% endblock %}
-
-<main class="{% block main_class %}container{% endblock %}">
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% for category, message in messages %}
-            <div class="flash flash-{{ category if category in ('success', 'error') else 'info' }}"
-                 role="{{ 'alert' if category == 'error' else 'status' }}">
-                {{ message }}
-            </div>
-        {% endfor %}
-    {% endwith %}
-
-    {% block content %}{% endblock %}
-
-</main>
-
-<footer class="site-footer">
-    <span>GAJ · Get A Job</span>
+{% macro footer_links() %}
     <a href="{{ url_for('pages.privacy') }}">Privacy</a>
     <a href="{{ url_for('pages.terms') }}">Terms</a>
     {% if feedback_url %}<a href="{{ feedback_url }}" target="_blank" rel="noopener">Send feedback</a>{% endif %}
     {% if contact_email %}<a href="mailto:{{ contact_email }}">Contact</a>{% endif %}
+{% endmacro %}
+
+{% if g.user %}
+{% set ep = request.endpoint or "" %}
+{% macro nav_item(endpoint, label, name, active, badge=0) %}
+    <a href="{{ url_for(endpoint) }}" class="nav-item{{ ' is-active' if active }}"
+       {% if active %}aria-current="page"{% endif %}>
+        {{ icon(name) }}<span>{{ label }}</span>
+        {% if badge %}<span class="nav-badge">{{ badge if badge < 100 else "99+" }}<span class="sr-only"> unread</span></span>{% endif %}
+    </a>
+{% endmacro %}
+
+<body class="app">
+
+<div class="mobile-bar">
+    <a class="wordmark wordmark-small" href="{{ url_for('applications.dashboard') }}">GAJ</a>
+    <button class="menu-button" type="button" data-toggle-nav aria-controls="sidebar"
+            aria-expanded="false">{{ icon("menu") }}<span class="sr-only">Menu</span></button>
+</div>
+
+<aside class="sidebar" id="sidebar">
+
+    <a class="sidebar-brand" href="{{ url_for('applications.dashboard') }}">
+        <span class="wordmark">GAJ</span>
+        <span class="wordmark-sub">get a job</span>
+    </a>
+
+    <nav class="sidebar-nav" aria-label="Main">
+        {% if g.user.is_employer %}
+        {{ nav_item("employer.posts", "Job posts", "jobs", ep in ("employer.posts", "employer.applicants", "employer.applicant", "employer.edit_job")) }}
+        {{ nav_item("employer.new_job", "Post a job", "plus", ep == "employer.new_job") }}
+        {{ nav_item("messages.conversations", "Messages", "messages", ep.startswith("messages."), unread_messages) }}
+        {{ nav_item("notifications.notifications", "Notifications", "notifications", ep.startswith("notifications."), unread_notifications) }}
+        {% else %}
+        {{ nav_item("applications.dashboard", "Dashboard", "dashboard", ep.startswith("applications.")) }}
+        {{ nav_item("jobs.jobs", "Jobs", "jobs", ep in ("jobs.jobs", "jobs.job_details")) }}
+        {{ nav_item("profile.profile", "Profile", "profile", ep.startswith("profile.")) }}
+        {{ nav_item("messages.conversations", "Messages", "messages", ep.startswith("messages."), unread_messages) }}
+        {{ nav_item("notifications.notifications", "Notifications", "notifications", ep.startswith("notifications."), unread_notifications) }}
+        {{ nav_item("inbox.inbox", "Inbox", "inbox", ep.startswith("inbox.")) }}
+        {{ nav_item("jobs.match_checker", "Match Checker", "match", ep == "jobs.match_checker") }}
+        {% endif %}
+    </nav>
+
+    <div class="sidebar-bottom">
+
+        {% if not g.user.is_employer %}
+        <div class="shift" data-screen-meter>
+            <div class="shift-head">
+                {{ icon("clock") }}
+                <span>On GAJ today</span>
+            </div>
+            <p class="shift-time"><span data-screen-time>{{ screen_time }}</span><span class="shift-goal"> / 7h</span></p>
+            <progress class="shift-bar" max="100" value="{{ screen_percent }}" data-screen-bar
+                      aria-label="Progress toward 7 hours today">{{ screen_percent }}%</progress>
+        </div>
+        {% endif %}
+
+        {{ nav_item("account.settings", "Account", "account", ep.startswith("account.")) }}
+        <form method="POST" action="{{ url_for('auth.logout') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="nav-item nav-signout">{{ icon("signout") }}<span>Sign out</span></button>
+        </form>
+    </div>
+
+</aside>
+
+<div class="workspace">
+    <main class="page {% block main_class %}{% endblock %}">
+        {% include "_flashes.html" %}
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="site-footer">{{ footer_links() }}</footer>
+</div>
+
+{% else %}
+
+<body class="public {% block body_class %}{% endblock %}">
+
+{% block public_header %}
+<header class="public-bar">
+    <a class="wordmark wordmark-small" href="{{ url_for('auth.home') }}">GAJ</a>
+    <nav>
+        <a href="{{ url_for('auth.login') }}">Log in</a>
+        <a class="btn btn-small" href="{{ url_for('auth.register') }}">Create account</a>
+    </nav>
+</header>
+{% endblock %}
+
+<main class="{% block public_main_class %}public-main{% endblock %}">
+    {% block public_flashes %}{% include "_flashes.html" %}{% endblock %}
+    {% block public_content %}{{ self.content() }}{% endblock %}
+</main>
+
+<footer class="site-footer">
+    <span>GAJ, get a job</span>
+    {{ footer_links() }}
 </footer>
+
+{% endif %}
 
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 

@@ -74,6 +74,12 @@ class Config:
     INBOUND_WEBHOOK_SECRET = os.environ.get("INBOUND_WEBHOOK_SECRET", "")
     INBOUND_DAILY_LIMIT = 300  # emails per user per day, so a leaked address can't flood an account
 
+    # Text-message codes for phone log-in (Twilio Verify). Leave empty on
+    # your laptop: codes are printed in the terminal instead.
+    TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID", "")
+    TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN", "")
+    TWILIO_VERIFY_SERVICE_SID = os.environ.get("TWILIO_VERIFY_SERVICE_SID", "")
+
     # Shown on the Privacy and Terms pages and in the footer
     CONTACT_EMAIL = os.environ.get("CONTACT_EMAIL", "")
     # Optional link for beta testers to send feedback (e.g. a Google Form)

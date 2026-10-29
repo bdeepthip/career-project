@@ -2,11 +2,14 @@
 Professional profile: details, skills, education, experience.
 """
 
-from flask import Blueprint, flash, g, redirect, render_template, request, url_for
+from datetime import datetime, timezone
+
+from flask import Blueprint, abort, flash, g, redirect, render_template, request, url_for
 from sqlalchemy import func
 
 from .auth import login_required
-from .models import Education, Experience, Profile, Skill, db
+from .models import Education, Experience, Profile, Resume, Skill, db
+from .resumes import pdf_download, read_pdf_upload
 from .validation import clean
 
 bp = Blueprint("profile", __name__)
@@ -21,6 +24,21 @@ PROFILE_FIELDS = [
     "headline", "phone", "location", "domain", "target_role",
     "experience_level", "preferred_location", "about",
 ]
+
+
+def profile_checklist(profile, skills, education, experience):
+    """What a strong profile has: (label, done?, where to fix it)."""
+    p = profile
+    return [
+        ("Headline", bool(p and p.headline), "#details"),
+        ("Location", bool(p and p.location), "#details"),
+        ("Target role", bool(p and p.target_role), "#details"),
+        ("About you", bool(p and p.about), "#details"),
+        ("At least 5 skills", len(skills) >= 5, "#skills"),
+        ("Education", bool(education), "#education"),
+        ("Work experience", bool(experience), "#experience"),
+        ("Resume (PDF)", Resume.query.filter_by(user_id=g.user.id).first() is not None, "#resume"),
+    ]
 
 
 @bp.route("/profile", methods=["GET", "POST"])
@@ -55,9 +73,14 @@ def profile():
     experience = (Experience.query.filter_by(user_id=user_id)
                   .order_by(Experience.start_date.desc()).all())
 
+    checklist = profile_checklist(profile_data, skills, education, experience)
+
     return render_template(
         "profile/profile.html",
+        todo=[(label, anchor) for label, done, anchor in checklist if not done],
+        completeness=round(100 * sum(done for _, done, _ in checklist) / len(checklist)),
         profile=profile_data,
+        resume=Resume.query.filter_by(user_id=user_id).first(),
         skills=skills,
         education=education,
         experience=experience,
@@ -156,3 +179,43 @@ def add_experience():
 def delete_experience(experience_id):
     _delete_owned(Experience, experience_id)
     return redirect(url_for("profile.profile") + "#experience")
+
+
+# ---------- Resume ----------
+
+@bp.route("/profile/resume", methods=["POST"])
+@login_required
+def upload_resume():
+    filename, data, error = read_pdf_upload(request.files.get("resume"))
+    if error:
+        flash(error, "error")
+        return redirect(url_for("profile.profile") + "#resume")
+
+    resume = Resume.query.filter_by(user_id=g.user.id).first()
+    if resume is None:
+        resume = Resume(user_id=g.user.id)
+        db.session.add(resume)
+    resume.filename, resume.data, resume.size = filename, data, len(data)
+    resume.uploaded_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    db.session.commit()
+
+    flash(f"Resume saved: {filename}. Easy Apply will send this file.", "success")
+    return redirect(url_for("profile.profile") + "#resume")
+
+
+@bp.route("/profile/resume/download")
+@login_required
+def download_resume():
+    resume = Resume.query.filter_by(user_id=g.user.id).first()
+    if resume is None:
+        abort(404)
+    return pdf_download(resume.filename, resume.data)
+
+
+@bp.route("/profile/resume/delete", methods=["POST"])
+@login_required
+def delete_resume():
+    Resume.query.filter_by(user_id=g.user.id).delete()
+    db.session.commit()
+    flash("Resume removed. Applications you already sent keep their copy.", "success")
+    return redirect(url_for("profile.profile") + "#resume")

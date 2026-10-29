@@ -1,0 +1,17 @@
+{# The message list of one conversation (also re-fetched every few seconds). #}
+<ol class="bubbles" data-thread data-latest-url="{{ url_for('messages.thread_latest', user_id=other.id) }}"
+    data-count="{{ messages | length }}" aria-live="polite">
+    {% for m in messages %}
+        {% set mine = m.sender_id == g.user.id %}
+        <li class="bubble-row {{ 'mine' if mine else 'theirs' }}"{% if loop.last %} id="latest"{% endif %}>
+            <div class="bubble">
+                <p>{{ m.body }}</p>
+            </div>
+            <span class="bubble-meta">
+                {{ "You" if mine else other.name.split()[0] }}, {{ m.created_at | time_ago_utc }}{% if mine and loop.last and m.read_at %}, seen{% endif %}
+            </span>
+        </li>
+    {% else %}
+        <li class="muted">No messages yet.</li>
+    {% endfor %}
+</ol>

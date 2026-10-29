@@ -130,7 +130,8 @@ def test_password_change_signs_out_other_devices(app, auth):
 
 def test_change_name(client, logged_in):
     client.post("/account/name", data={"name": "New Name"})
-    assert b"Welcome, New Name" in client.get("/dashboard").data
+    assert b"New Name" in client.get("/profile").data
+    assert b"Good to see you, New." in client.get("/dashboard").data
 
 
 # ---------- Export ----------
@@ -152,7 +153,7 @@ def test_export_contains_own_data_only(client, auth):
 
     forwarding = data["account"].pop("forwarding_address")
     assert forwarding.startswith("gaj-") and forwarding.endswith("@in.jobtrack.test")
-    assert data["account"] == {"name": "Test User", "email": "test@example.com"}
+    assert data["account"] == {"name": "Test User", "email": "test@example.com", "phone": None}
     assert [a["company"] for a in data["applications"]] == ["MyCo"]
     assert data["skills"] == ["Python"]
     assert b"OtherCo" not in response.data
