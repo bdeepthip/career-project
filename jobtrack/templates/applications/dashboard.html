@@ -5,18 +5,101 @@
 
 {% block content %}
 
-<section class="today">
-    <p class="today-greeting">Good to see you, {{ g.user["name"].split(" ")[0] }}.</p>
-    <figure class="today-line">
-        <blockquote>{{ daily_line }}</blockquote>
-        <figcaption>Today's line, {{ today_label }}</figcaption>
-    </figure>
+<header class="dash-head">
+    <div>
+        <h1>Good to see you, {{ g.user["name"].split(" ")[0] }}.</h1>
+        <figure class="today-line">
+            <blockquote>{{ daily_line }}</blockquote>
+            <figcaption>Today's line, {{ today_label }}</figcaption>
+        </figure>
+    </div>
+    <div class="dash-actions">
+        <a class="btn btn-secondary" href="{{ url_for('applications.board') }}">{{ icon("board") }}Open board</a>
+        <a class="btn" href="{{ url_for('applications.add_application') }}">{{ icon("plus") }}Add application</a>
+    </div>
+</header>
+
+<section class="metrics" aria-label="Your numbers">
+    <div class="metric">
+        <span class="metric-label">Applications</span>
+        <span class="metric-value">{{ total }}</span>
+        <span class="metric-note">all time</span>
+    </div>
+    <div class="metric">
+        <span class="metric-label">This week</span>
+        <span class="metric-value">{{ this_week }}</span>
+        {% set diff = this_week - last_week %}
+        <span class="metric-note {{ 'is-up' if diff > 0 else ('is-down' if diff < 0 else '') }}">
+            {%- if diff > 0 %}{{ diff }} more than last week
+            {%- elif diff < 0 %}{{ -diff }} fewer than last week
+            {%- else %}same as last week{% endif -%}
+        </span>
+    </div>
+    <div class="metric">
+        <span class="metric-label">Response rate</span>
+        <span class="metric-value">{{ rates.response ~ "%" if rates.response is not none else "–" }}</span>
+        <span class="metric-note">got an interview, offer or rejection</span>
+    </div>
+    <div class="metric">
+        <span class="metric-label">Interview rate</span>
+        <span class="metric-value">{{ rates.interview ~ "%" if rates.interview is not none else "–" }}</span>
+        <span class="metric-note">reached an interview or offer</span>
+    </div>
 </section>
 
-<div class="page-header">
-    <h1>Your applications</h1>
-    <a class="btn" href="{{ url_for('applications.add_application') }}">{{ icon("plus") }}Add application</a>
+<div class="insight-grid">
+    <section class="panel chart-panel" aria-labelledby="weekly-title">
+        <div class="panel-head">
+            <h2 id="weekly-title">Applications per week</h2>
+            <span class="panel-meta">Last 8 weeks</span>
+        </div>
+        <svg class="week-chart" viewBox="-30 -18 {{ chart.width + 38 }} {{ chart.height + 46 }}"
+             role="img" aria-labelledby="weekly-title weekly-desc">
+            <desc id="weekly-desc">{% for bar in chart.bars %}Week of {{ bar.label }}: {{ bar.count }}. {% endfor %}</desc>
+            <defs>
+                <linearGradient id="bar-glow" x1="0" y1="1" x2="0" y2="0">
+                    <stop offset="0" class="stop-a"/>
+                    <stop offset="1" class="stop-b"/>
+                </linearGradient>
+            </defs>
+            {% for step in range(5) %}
+                {% set y = chart.height - chart.height * step / 4 %}
+                <line class="grid-line" x1="0" x2="{{ chart.width }}" y1="{{ y }}" y2="{{ y }}"/>
+                <text class="axis-label" x="-10" y="{{ y + 4 }}" text-anchor="end">{{ (chart.top * step / 4) | int }}</text>
+            {% endfor %}
+            {% for bar in chart.bars %}
+                <g class="bar{{ ' is-current' if bar.current }}">
+                    {% if bar.count %}
+                    <rect class="bar-fill" x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.width }}" height="{{ bar.height }}" rx="5"/>
+                    <text class="bar-value" x="{{ bar.x + bar.width / 2 }}" y="{{ bar.y - 7 }}" text-anchor="middle">{{ bar.count }}</text>
+                    {% endif %}
+                    <text class="axis-label" x="{{ bar.x + bar.width / 2 }}" y="{{ chart.height + 22 }}" text-anchor="middle">{{ "This week" if bar.current else bar.label }}</text>
+                </g>
+            {% endfor %}
+        </svg>
+    </section>
+
+    <section class="panel pipeline-panel" aria-labelledby="pipeline-title">
+        <div class="panel-head">
+            <h2 id="pipeline-title">Pipeline</h2>
+            <a class="panel-meta" href="{{ url_for('applications.board') }}">Open board</a>
+        </div>
+        <ul class="pipeline">
+            {% for stage in pipeline %}
+            <li class="stage stage-{{ stage.status | lower }}">
+                <span class="stage-name">{{ stage.status }}</span>
+                <span class="stage-count">{{ stage.count }} <span class="stage-percent">{{ stage.percent }}%</span></span>
+                <svg class="stage-bar" viewBox="0 0 100 6" preserveAspectRatio="none" aria-hidden="true">
+                    <rect class="stage-track" width="100" height="6" rx="3"/>
+                    {% if stage.count %}<rect class="stage-fill" width="{{ [stage.percent, 2] | max }}" height="6" rx="3"/>{% endif %}
+                </svg>
+            </li>
+            {% endfor %}
+        </ul>
+    </section>
 </div>
+
+<h2 class="section-title">Your applications</h2>
 
 {# The counts double as filters: click one to show only that status #}
 <nav class="status-strip" aria-label="Filter by status">

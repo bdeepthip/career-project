@@ -1,6 +1,6 @@
 {% from "_icons.html" import icon %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="{{ 'light' if request.cookies.get('theme') == 'light' else 'dark' }}">
 
 <head>
     <meta charset="UTF-8">
@@ -56,7 +56,8 @@
         {{ nav_item("messages.conversations", "Messages", "messages", ep.startswith("messages."), unread_messages) }}
         {{ nav_item("notifications.notifications", "Notifications", "notifications", ep.startswith("notifications."), unread_notifications) }}
         {% else %}
-        {{ nav_item("applications.dashboard", "Dashboard", "dashboard", ep.startswith("applications.")) }}
+        {{ nav_item("applications.dashboard", "Dashboard", "dashboard", ep.startswith("applications.") and ep != "applications.board") }}
+        {{ nav_item("applications.board", "Board", "board", ep == "applications.board") }}
         {{ nav_item("jobs.jobs", "Jobs", "jobs", ep in ("jobs.jobs", "jobs.job_details")) }}
         {{ nav_item("profile.profile", "Profile", "profile", ep.startswith("profile.")) }}
         {{ nav_item("messages.conversations", "Messages", "messages", ep.startswith("messages."), unread_messages) }}
@@ -80,6 +81,10 @@
         </div>
         {% endif %}
 
+        <button class="nav-item theme-toggle" type="button" data-theme-toggle>
+            <span class="theme-when-dark">{{ icon("sun") }}<span>Light mode</span></span>
+            <span class="theme-when-light">{{ icon("moon") }}<span>Dark mode</span></span>
+        </button>
         {{ nav_item("account.settings", "Account", "account", ep.startswith("account.")) }}
         <form method="POST" action="{{ url_for('auth.logout') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -105,6 +110,10 @@
 <header class="public-bar">
     <a class="wordmark wordmark-small" href="{{ url_for('auth.home') }}">GAJ</a>
     <nav>
+        <button class="theme-icon" type="button" data-theme-toggle>
+            <span class="theme-when-dark">{{ icon("sun") }}<span class="sr-only">Switch to light mode</span></span>
+            <span class="theme-when-light">{{ icon("moon") }}<span class="sr-only">Switch to dark mode</span></span>
+        </button>
         <a href="{{ url_for('auth.login') }}">Log in</a>
         <a class="btn btn-small" href="{{ url_for('auth.register') }}">Create account</a>
     </nav>

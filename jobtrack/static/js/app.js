@@ -131,3 +131,116 @@ document.addEventListener("keydown", function (event) {
             .catch(function () { /* offline: try again next time */ });
     }, 8000);
 })();
+
+
+// ---------- Light / dark theme ----------
+// The choice is kept in a cookie, so the server renders the right
+// theme on the next page load and the page never flashes.
+
+document.addEventListener("click", function (event) {
+    if (!event.target.closest("[data-theme-toggle]")) return;
+    var root = document.documentElement;
+    var next = root.dataset.theme === "light" ? "dark" : "light";
+    root.dataset.theme = next;
+    document.cookie = "theme=" + next + "; path=/; max-age=31536000; SameSite=Lax";
+});
+
+
+// ---------- Board: drag a card to another column ----------
+
+(function () {
+    var board = document.querySelector("[data-board]");
+    if (!board) return;
+
+    var csrf = document.querySelector('meta[name="csrf-token"]');
+    var announcer = document.querySelector("[data-board-status]");
+    var dragged = null;
+
+    // With JavaScript on, changing the menu moves the card straight away,
+    // so the Move button is only needed without JavaScript.
+    board.querySelectorAll("[data-card-submit]").forEach(function (button) {
+        button.hidden = true;
+    });
+
+    function refreshCounts() {
+        board.querySelectorAll("[data-column]").forEach(function (column) {
+            var n = column.querySelectorAll("[data-card]").length;
+            column.querySelector("[data-column-count]").textContent = n;
+            column.classList.toggle("is-empty", n === 0);
+        });
+    }
+
+    function moveCard(card, status) {
+        var from = card.closest("[data-column]");
+        var to = board.querySelector('[data-column="' + status + '"]');
+        if (!to || from === to) return;
+
+        to.querySelector("[data-column-cards]").prepend(card);
+        card.querySelector("[data-card-select]").value = status;
+        card.classList.add("is-landed");
+        setTimeout(function () { card.classList.remove("is-landed"); }, 600);
+        refreshCounts();
+
+        var body = new URLSearchParams();
+        body.set("status", status);
+        fetch(card.dataset.moveUrl, {
+            method: "POST",
+            headers: {
+                "Accept": "application/json",
+                "X-CSRFToken": csrf ? csrf.content : "",
+            },
+            body: body,
+            credentials: "same-origin",
+        }).then(function (response) {
+            if (!response.ok) throw new Error("move failed");
+            var name = card.querySelector("strong").textContent;
+            if (announcer) announcer.textContent = "Moved " + name + " to " + status + ".";
+        }).catch(function () {
+            // Put the card back so the board shows what is really saved
+            from.querySelector("[data-column-cards]").prepend(card);
+            card.querySelector("[data-card-select]").value = from.dataset.column;
+            refreshCounts();
+            if (announcer) announcer.textContent = "That move didn't save. Try again.";
+        });
+    }
+
+    board.addEventListener("dragstart", function (event) {
+        dragged = event.target.closest("[data-card]");
+        if (!dragged) return;
+        dragged.classList.add("is-dragging");
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", "");
+    });
+
+    board.addEventListener("dragend", function () {
+        if (dragged) dragged.classList.remove("is-dragging");
+        dragged = null;
+        board.querySelectorAll(".is-over").forEach(function (c) { c.classList.remove("is-over"); });
+    });
+
+    board.addEventListener("dragover", function (event) {
+        var column = event.target.closest("[data-column]");
+        if (!column || !dragged) return;
+        event.preventDefault();
+        board.querySelectorAll(".is-over").forEach(function (c) {
+            if (c !== column) c.classList.remove("is-over");
+        });
+        column.classList.add("is-over");
+    });
+
+    board.addEventListener("drop", function (event) {
+        var column = event.target.closest("[data-column]");
+        if (!column || !dragged) return;
+        event.preventDefault();
+        column.classList.remove("is-over");
+        moveCard(dragged, column.dataset.column);
+    });
+
+    board.addEventListener("change", function (event) {
+        var select = event.target.closest("[data-card-select]");
+        if (!select) return;
+        moveCard(select.closest("[data-card]"), select.value);
+    });
+
+    refreshCounts();
+})();
