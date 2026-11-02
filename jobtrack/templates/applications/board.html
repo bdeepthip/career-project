@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}Board{% endblock %}
+{% block main_class %}page-wide{% endblock %}
+
+{% block content %}
+
+<header class="dash-head">
+    <div>
+        <h1>Board</h1>
+        <p class="lede">Drag a card to a new column when a company writes back. You can also use the menu on each card.</p>
+    </div>
+    <div class="dash-actions">
+        <a class="btn" href="{{ url_for('applications.add_application') }}">{{ icon("plus") }}Add application</a>
+    </div>
+</header>
+
+<p class="sr-only" role="status" aria-live="polite" data-board-status></p>
+
+<div class="board" data-board>
+    {% for status in statuses %}
+    {% set cards = columns[status] %}
+    <section class="column column-{{ status | lower }}" data-column="{{ status }}"
+             aria-labelledby="column-{{ status | lower }}">
+        <header class="column-head">
+            <span class="column-dot" aria-hidden="true"></span>
+            <h2 id="column-{{ status | lower }}">{{ status }}</h2>
+            <span class="column-count" data-column-count>{{ cards | length }}</span>
+        </header>
+
+        <ol class="column-cards" data-column-cards>
+            {% for application in cards %}
+            <li class="card" draggable="true" data-card
+                data-move-url="{{ url_for('applications.move_application', application_id=application.id) }}">
+                <div class="card-top">
+                    <span class="monogram monogram-{{ application.company | length % 6 }}" aria-hidden="true">{{ application.company[:1] | upper }}</span>
+                    <div class="card-title">
+                        <strong>{{ application.company }}</strong>
+                        <span>{{ application.job_title }}</span>
+                    </div>
+                </div>
+                <p class="card-meta">
+                    {% if application.location %}<span>{{ icon("pin") }}{{ application.location }}</span>{% endif %}
+                    <span>Applied {{ application.date_applied | time_ago }}</span>
+                </p>
+                <div class="card-foot">
+                    <form method="POST" class="card-move"
+                          action="{{ url_for('applications.move_application', application_id=application.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <label class="sr-only" for="move-{{ application.id }}">Status for {{ application.company }}</label>
+                        <select id="move-{{ application.id }}" name="status" data-card-select>
+                            {% for option in statuses %}
+                            <option value="{{ option }}" {{ 'selected' if option == status }}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                        <button class="btn btn-small btn-quiet" type="submit" data-card-submit>Move</button>
+                    </form>
+                    <a class="card-edit" href="{{ url_for('applications.edit_application', application_id=application.id) }}">{{ icon("edit") }}<span class="sr-only">Edit {{ application.company }}</span></a>
+                </div>
+            </li>
+            {% endfor %}
+        </ol>
+        <p class="column-empty">Drop a card here</p>
+    </section>
+    {% endfor %}
+</div>
+
+{% if total == 0 %}
+<div class="empty-state">
+    <h2>Your board is empty</h2>
+    <p>Add an application and it appears in the Applied column.</p>
+    <a class="btn" href="{{ url_for('applications.add_application') }}">Add your first application</a>
+</div>
+{% endif %}
+
+{% endblock %}
