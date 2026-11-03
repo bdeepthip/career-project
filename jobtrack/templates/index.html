@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 
 {% block title %}Get A Job{% endblock %}
 {% block public_main_class %}landing{% endblock %}
@@ -6,16 +7,53 @@
 
 {% block content %}
 <section class="landing-hero">
-    <h1 class="landing-wordmark">GAJ</h1>
-    <p class="landing-tagline">get a job.</p>
-    <p class="landing-lead">
-        Keep every application in one place, see how your skills match each job,
-        and let job emails update your statuses for you.
-    </p>
-    <div class="landing-actions">
-        <a class="btn btn-large btn-marigold" href="{{ url_for('auth.register') }}">Create your free account</a>
-        <a class="btn btn-large btn-ghost" href="{{ url_for('auth.login') }}">Log in</a>
+    <div class="landing-copy">
+        <h1 class="landing-wordmark">GAJ</h1>
+        <p class="landing-tagline">get a job.</p>
+        <p class="landing-lead">
+            Run your job search like a project. Track every application,
+            see your week on a chart, move roles from Applied to Offer,
+            and let job emails update your statuses for you.
+        </p>
+        <div class="landing-actions">
+            <a class="btn btn-large btn-marigold" href="{{ url_for('auth.register') }}">Create your free account</a>
+            <a class="btn btn-large btn-ghost" href="{{ url_for('auth.login') }}">Log in</a>
+        </div>
+        {% if config.BETA_INVITE_CODE %}
+        <p class="landing-beta">GAJ is in private beta. Sign-up needs the invite code from your invitation.</p>
+        {% endif %}
     </div>
+
+    {% include "_preview.html" %}
+</section>
+
+<section class="landing-features" aria-labelledby="features-title">
+    <h2 id="features-title" class="sr-only">What GAJ does</h2>
+    <ul>
+        <li>
+            {{ icon("board") }}
+            <h3>A board for every application</h3>
+            <p>Drag a role from Applied to Interview to Offer when a company writes back.</p>
+        </li>
+        <li>
+            {{ icon("dashboard") }}
+            <h3>Your week in numbers</h3>
+            <p>Applications per week, response rate and interview rate, updated as you go.</p>
+        </li>
+        <li>
+            {{ icon("inbox") }}
+            <h3>Emails that update themselves</h3>
+            <p>Forward job emails to your GAJ address and the matching status changes for you.</p>
+        </li>
+        <li>
+            {{ icon("match") }}
+            <h3>See how you match</h3>
+            <p>Paste a job description and see which of its skills you have and which to learn.</p>
+        </li>
+    </ul>
+</section>
+
+<section class="landing-close">
     <figure class="landing-daily">
         <blockquote>{{ daily_line }}</blockquote>
         <figcaption>Today's line</figcaption>

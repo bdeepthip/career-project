@@ -19,6 +19,30 @@
     </div>
 </header>
 
+{% if setup_left and total < 10 %}
+<section class="panel setup" aria-labelledby="setup-title">
+    <div class="panel-head">
+        <h2 id="setup-title">Get set up</h2>
+        <span class="panel-meta">{{ setup | length - setup_left }} of {{ setup | length }} done</span>
+    </div>
+    <ol class="setup-steps-list">
+        {% for step in setup %}
+        <li class="setup-step{{ ' is-done' if step.done }}">
+            <span class="setup-mark" aria-hidden="true">{{ "✓" if step.done else loop.index }}</span>
+            <div>
+                <h3>{{ step.title }}{% if step.done %}<span class="sr-only"> (done)</span>{% endif %}</h3>
+                <p>{{ step.text }}</p>
+            </div>
+            {% if not step.done %}
+            <a class="btn btn-small {{ 'btn-secondary' if not loop.first or total }}" href="{{ step.url }}">{{ step.action }}</a>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ol>
+</section>
+{% endif %}
+
+{% if total %}
 <section class="metrics" aria-label="Your numbers">
     <div class="metric">
         <span class="metric-label">Applications</span>
@@ -201,6 +225,8 @@
     <p>No applications match this search or filter.</p>
     <a class="btn btn-quiet" href="{{ url_for('applications.dashboard') }}">Show all</a>
 </div>
+
+{% endif %}
 
 {% endif %}
 

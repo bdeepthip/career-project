@@ -165,6 +165,8 @@ Use a test account first, then your real one.
 - [ ] Account: **Download my data** works
 - [ ] Delete the test account
 - [ ] The Privacy and Terms pages show your contact email
+- [ ] The browser tab shows the GAJ icon, and `https://yourdomain.com/robots.txt` loads
+- [ ] A new account's Dashboard shows **Get set up**, and the steps tick off as you do them
 
 ## 9. Invite beta testers
 
@@ -172,9 +174,14 @@ Use a test account first, then your real one.
    missing, and would you keep using it? Put its link in `FEEDBACK_URL`
    in Render. Saving the change redeploys the app.
 2. Invite 10–20 people who are job hunting right now (classmates,
-   friends from work). Send them the link, the invite code, and
-   one line on what GAJ does.
-3. Read the feedback weekly and fix the most common problem first.
+   friends from work). Send them this link, which fills in the
+   invite code for them:
+   `https://yourdomain.com/register?invite=YOUR-CODE`
+3. Before you share the site on LinkedIn, paste `https://yourdomain.com`
+   into LinkedIn's Post Inspector (linkedin.com/post-inspector). It
+   should show the GAJ preview image and title. If it shows an old
+   preview, click **Inspect** again to refresh it.
+4. Read the feedback weekly and fix the most common problem first.
 
 ## Every update after launch
 

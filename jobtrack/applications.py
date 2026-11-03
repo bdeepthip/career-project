@@ -12,7 +12,7 @@ from sqlalchemy import func, or_
 
 from . import insights
 from .auth import login_required
-from .models import JobApplication, JobEmail, db
+from .models import JobApplication, JobEmail, Resume, Skill, db
 from .validation import STATUSES, validate_application
 
 bp = Blueprint("applications", __name__)
@@ -33,6 +33,29 @@ def get_application(application_id):
     if application is None:
         abort(404)
     return application
+
+
+def setup_steps(user_id, total):
+    """The getting-started list on a new account's dashboard. Each step
+    is checked with a small EXISTS-style query, never by loading rows."""
+
+    def has(model):
+        return db.session.query(model.id).filter_by(user_id=user_id).first() is not None
+
+    return [
+        {"title": "Add your first application", "done": total > 0,
+         "text": "Every job you apply to, in one list and on the board.",
+         "url": url_for("applications.add_application"), "action": "Add application"},
+        {"title": "Add your skills", "done": has(Skill),
+         "text": "GAJ uses them to show how well you match each job.",
+         "url": url_for("profile.profile"), "action": "Open profile"},
+        {"title": "Upload your resume", "done": has(Resume),
+         "text": "Saved once, then sent with every Easy Apply.",
+         "url": url_for("profile.profile"), "action": "Open profile"},
+        {"title": "Forward one job email", "done": has(JobEmail),
+         "text": "Use your GAJ address and the matching status updates itself.",
+         "url": url_for("inbox.inbox"), "action": "Open inbox"},
+    ]
 
 
 @bp.route("/dashboard")
@@ -68,6 +91,7 @@ def dashboard():
         counts[status] = n
 
     weeks = insights.weekly_counts(g.user.id)
+    setup = setup_steps(g.user.id, sum(counts.values()))
 
     return render_template(
         "applications/dashboard.html",
@@ -79,6 +103,8 @@ def dashboard():
         last_week=weeks[-2]["count"],
         pipeline=insights.pipeline(counts),
         rates=insights.rates(counts),
+        setup=setup,
+        setup_left=sum(1 for step in setup if not step["done"]),
         statuses=STATUSES,
         search=search,
         status_filter=status_filter,

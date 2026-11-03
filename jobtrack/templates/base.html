@@ -7,6 +7,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{% block title %}Get A Job{% endblock %} | GAJ</title>
+    {% set page_description = "GAJ (Get A Job) helps you run your job search like a project: track every application, chart your week, move roles from Applied to Offer, and let job emails update your statuses." %}
+    <meta name="description" content="{{ page_description }}">
+    <meta name="theme-color" content="#0a0c1d">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" sizes="any">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon-32.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="GAJ">
+    <meta property="og:title" content="GAJ: get a job">
+    <meta property="og:description" content="{{ page_description }}">
+    <meta property="og:url" content="{{ url_for('auth.home', _external=True) }}">
+    <meta property="og:image" content="{{ url_for('static', filename='img/og-image.png', _external=True) }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="The GAJ dashboard: a weekly applications chart and a board with Applied, Interview and Offer columns.">
+    <meta name="twitter:card" content="summary_large_image">
     <link rel="preload" href="{{ url_for('static', filename='fonts/bricolage-grotesque.woff2') }}"
           as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">

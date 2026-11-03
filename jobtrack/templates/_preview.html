@@ -1,0 +1,41 @@
+{# A small drawing of the app, made of HTML, so it stays sharp at every size.
+   Decorative: screen readers skip it, and the list below says the same in words. #}
+<div class="preview" aria-hidden="true">
+    <div class="preview-bar">
+        <span></span><span></span><span></span>
+        <p>Your week</p>
+    </div>
+    <div class="preview-body">
+        <div class="preview-numbers">
+            <div><strong>25</strong><small>Applications</small></div>
+            <div><strong>6</strong><small>This week</small></div>
+            <div><strong>28%</strong><small>Response rate</small></div>
+        </div>
+        <svg class="preview-chart" viewBox="0 0 320 110" preserveAspectRatio="none">
+            <defs>
+                <linearGradient id="preview-glow" x1="0" y1="1" x2="0" y2="0">
+                    <stop offset="0" class="stop-a"/><stop offset="1" class="stop-b"/>
+                </linearGradient>
+            </defs>
+            {% for h in [18, 36, 36, 54, 36, 72, 90, 108] %}
+            <rect x="{{ loop.index0 * 40 + 4 }}" y="{{ 110 - h }}" width="32" height="{{ h }}" rx="5"
+                  class="{{ 'is-current' if loop.last }}"/>
+            {% endfor %}
+        </svg>
+        <div class="preview-board">
+            <div class="preview-col">
+                <p><i class="dot dot-applied"></i>Applied</p>
+                <span class="preview-card">Databricks<small>Software Engineer</small></span>
+                <span class="preview-card">Two Sigma<small>Software Engineer</small></span>
+            </div>
+            <div class="preview-col">
+                <p><i class="dot dot-interview"></i>Interview</p>
+                <span class="preview-card is-moving">Palantir<small>Forward Deployed SWE</small></span>
+            </div>
+            <div class="preview-col">
+                <p><i class="dot dot-offer"></i>Offer</p>
+                <span class="preview-slot"></span>
+            </div>
+        </div>
+    </div>
+</div>

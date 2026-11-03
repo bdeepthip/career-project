@@ -49,7 +49,7 @@
     {% if config.BETA_INVITE_CODE %}
     <div class="form-group">
         <label for="invite_code">Invite code</label>
-        <input type="text" id="invite_code" name="invite_code" value="{{ invite_code or '' }}"
+        <input type="text" id="invite_code" name="invite_code" value="{{ invite_code or request.args.get('invite', '')[:100] }}"
                placeholder="From your beta invitation" autocomplete="off" maxlength="100" required>
     </div>
     {% endif %}
