@@ -1,6 +1,6 @@
 {% from "_icons.html" import icon %}
 <!DOCTYPE html>
-<html lang="en" data-theme="{{ 'light' if request.cookies.get('theme') == 'light' else 'dark' }}">
+<html lang="en" data-theme="{{ 'dark' if request.cookies.get('theme') == 'dark' else 'light' }}">
 
 <head>
     <meta charset="UTF-8">
@@ -9,13 +9,13 @@
     <title>{% block title %}Your job search{% endblock %} | Roleflow</title>
     {% set page_description = "Roleflow helps you run your job search like a project: track every application, chart your week, move roles from Applied to Offer, and let job emails update your statuses." %}
     <meta name="description" content="{{ page_description }}">
-    <meta name="theme-color" content="#0a0c1d">
+    <meta name="theme-color" content="#f6f9f8">
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" sizes="any">
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon-32.png') }}">
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Roleflow">
-    <meta property="og:title" content="Roleflow: get a job">
+    <meta property="og:title" content="Roleflow: From Job Search to Job Success.">
     <meta property="og:description" content="{{ page_description }}">
     <meta property="og:url" content="{{ url_for('auth.home', _external=True) }}">
     <meta property="og:image" content="{{ url_for('static', filename='img/og-image.png', _external=True) }}">
@@ -62,7 +62,7 @@
 
     <a class="sidebar-brand" href="{{ url_for('applications.dashboard') }}">
         <span class="wordmark">Roleflow</span>
-        <span class="wordmark-sub">get a job</span>
+        <span class="wordmark-sub">From job search to job success</span>
     </a>
 
     <nav class="sidebar-nav" aria-label="Main">
@@ -142,7 +142,7 @@
 </main>
 
 <footer class="site-footer">
-    <span>Roleflow, get a job</span>
+    <span>Roleflow: From Job Search to Job Success.</span>
     {{ footer_links() }}
 </footer>
 

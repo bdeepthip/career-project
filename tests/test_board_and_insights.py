@@ -129,14 +129,14 @@ def test_dashboard_shows_rates_and_chart(client, logged_in):
 
 # ---------- Theme ----------
 
-def test_dark_theme_by_default_and_light_from_cookie(client):
-    assert 'data-theme="dark"' in client.get("/login").get_data(as_text=True)
-    client.set_cookie("theme", "light")
+def test_light_theme_by_default_and_dark_from_cookie(client):
     assert 'data-theme="light"' in client.get("/login").get_data(as_text=True)
+    client.set_cookie("theme", "dark")
+    assert 'data-theme="dark"' in client.get("/login").get_data(as_text=True)
 
 
 def test_theme_cookie_cannot_inject_markup(client):
     client.set_cookie("theme", '"><script>alert(1)</script>')
     page = client.get("/login").get_data(as_text=True)
     assert "<script>alert(1)" not in page
-    assert 'data-theme="dark"' in page
+    assert 'data-theme="light"' in page
