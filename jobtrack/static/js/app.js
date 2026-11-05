@@ -1,4 +1,4 @@
-// Small helpers used across GAJ. Loaded from this file (not written
+// Small helpers used across Roleflow. Loaded from this file (not written
 // inside the HTML) so the Content-Security-Policy can block any inline script.
 
 // Any form with data-confirm="..." asks before submitting.
@@ -59,7 +59,7 @@ document.addEventListener("keydown", function (event) {
 
 // ---------- Screen time ----------
 // Every 30 seconds, if this tab is visible and the person moved, typed,
-// scrolled or tapped in the last 3 minutes, tell GAJ to count 30 seconds.
+// scrolled or tapped in the last 3 minutes, tell Roleflow to count 30 seconds.
 // Idle tabs and background tabs never count.
 
 (function () {

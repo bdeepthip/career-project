@@ -9,10 +9,10 @@
     <h1>Jobs</h1>
 </div>
 
-<section class="shift-banner" aria-label="Your time on GAJ today">
+<section class="shift-banner" aria-label="Your time on Roleflow today">
     <div class="shift-banner-clock">
         <p class="shift-banner-time"><span data-screen-time>{{ screen_time }}</span></p>
-        <p class="shift-banner-label">on GAJ today, of a 7-hour goal</p>
+        <p class="shift-banner-label">on Roleflow today, of a 7-hour goal</p>
         <progress class="shift-bar shift-bar-large" max="100" value="{{ screen_percent }}" data-screen-bar
                   aria-label="Progress toward 7 hours today">{{ screen_percent }}%</progress>
     </div>
@@ -105,7 +105,7 @@
     {% endfor %}
 </div>
 
-<p class="footnote">Jobs marked Easy Apply were posted on GAJ by employers. The rest are sample listings while GAJ
+<p class="footnote">Jobs marked Easy Apply were posted on Roleflow by employers. The rest are sample listings while Roleflow
     is in beta; to check a real posting, paste it into the <a href="{{ url_for('jobs.match_checker') }}">Match Checker</a>.</p>
 
 {% endblock %}

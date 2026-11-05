@@ -1,8 +1,8 @@
 /**
  * Cloudflare Email Worker: receives mail for your inbound domain and
- * posts it to GAJ. Cloudflare Email Routing is free.
+ * posts it to Roleflow. Cloudflare Email Routing is free.
  *
- * Setup (done in Phase 5, once GAJ is online):
+ * Setup (done in Phase 5, once Roleflow is online):
  *   1. Cloudflare dashboard -> your domain -> Email -> Email Routing -> enable.
  *   2. Workers & Pages -> Create Worker -> paste this file -> Deploy.
  *   3. Worker -> Settings -> Variables:
@@ -25,9 +25,9 @@ export default {
       body: raw,
     });
 
-    // A temporary failure (GAJ restarting) makes the sender retry later
+    // A temporary failure (Roleflow restarting) makes the sender retry later
     if (response.status >= 500) {
-      message.setReject("GAJ is temporarily unavailable, try again later");
+      message.setReject("Roleflow is temporarily unavailable, try again later");
     }
   },
 };

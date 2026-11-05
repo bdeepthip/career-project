@@ -63,7 +63,7 @@ def open_notification(note_id):
         abort(404)
     note.read_at = note.read_at or utc_now()
     db.session.commit()
-    # Links are always GAJ paths we wrote ourselves; never redirect elsewhere
+    # Links are always Roleflow paths we wrote ourselves; never redirect elsewhere
     link = note.link if note.link and note.link.startswith("/") and not note.link.startswith("//") else None
     return redirect(link or url_for("notifications.notifications"))
 

@@ -55,7 +55,7 @@
             {% elif g.user.is_employer %}
                 <p class="apply-status">Job seekers can Easy Apply to this job.</p>
             {% else %}
-                <p class="apply-status">Posted on GAJ. Apply in one step with your profile and resume.</p>
+                <p class="apply-status">Posted on Roleflow. Apply in one step with your profile and resume.</p>
                 <div class="job-actions">
                     <a class="btn btn-large" href="{{ url_for('apply.easy_apply', job_id=job.id) }}">Easy Apply</a>
                 </div>

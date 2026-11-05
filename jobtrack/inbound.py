@@ -1,10 +1,10 @@
 """
 Incoming email: every user's personal forwarding address.
 
-Each user has an address like jt-7fk2m9qa4xwd@in.example.com. They set
+Each user has an address like rf-7fk2m9qa4xwd@in.example.com. They set
 Gmail (or Outlook) to forward job emails there. An email service that
 receives mail for that domain posts each email to POST /inbound/email,
-and GAJ runs it through the same matching as the Inbox.
+and Roleflow runs it through the same matching as the Inbox.
 
 Supported senders of the webhook (pick one in production):
   * Cloudflare Email Routing + a small Worker (free): raw email,
@@ -37,9 +37,9 @@ from .models import JobEmail, User, db, new_inbound_token
 bp = Blueprint("inbound", __name__)
 
 MAX_BODY_CHARS = 20000
-# Addresses look like gaj-<token>@domain. "jt-" was the prefix before the
-# app was renamed; still accepted so no forwarding setup ever breaks.
-ADDRESS_PREFIXES = ("gaj-", "jt-")
+# Addresses look like rf-<token>@domain. "gaj-" and "jt-" were the prefixes
+# under the app's earlier names; still accepted so no forwarding setup breaks.
+ADDRESS_PREFIXES = ("rf-", "gaj-", "jt-")
 GMAIL_CONFIRM_SENDER = "forwarding-noreply@google.com"
 
 
@@ -59,7 +59,7 @@ def find_user(recipients):
         prefix = next((p for p in ADDRESS_PREFIXES if local.startswith(p)), None)
         if addr_domain != domain or prefix is None:
             continue
-        token = local[len(prefix):].split("+", 1)[0]  # allow gaj-token+anything@
+        token = local[len(prefix):].split("+", 1)[0]  # allow rf-token+anything@
         if token:
             user = User.query.filter_by(inbound_token=token).first()
             if user is not None:

@@ -46,7 +46,7 @@ def test_message_someone_by_email(app, client, three):
 def test_unknown_email_and_self_are_refused(app, client, three):
     response = client.post("/messages/new", data={"email": "nobody@example.com", "body": "hi"},
                            follow_redirects=True)
-    assert b"No GAJ account uses that email" in response.data
+    assert b"No Roleflow account uses that email" in response.data
     say(client, A, "talking to myself")
     with app.app_context():
         assert Message.query.count() == 0
@@ -170,7 +170,7 @@ def test_forwarded_email_status_change_notifies(app, client, logged_in):
     with app.app_context():
         token = User.query.one().inbound_token
     client.post("/inbound/email", headers={"X-JobTrack-Secret": "test-inbound-secret"}, json={
-        "OriginalRecipient": f"gaj-{token}@in.jobtrack.test", "From": "talent@adobe.com",
+        "OriginalRecipient": f"rf-{token}@in.jobtrack.test", "From": "talent@adobe.com",
         "Subject": "Interview invitation", "TextBody": "We'd like to schedule an interview.",
     })
     page = client.get("/notifications").get_data(as_text=True)

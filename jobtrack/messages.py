@@ -1,10 +1,10 @@
 """
-Messages: direct messages between GAJ users (referrals, study partners,
+Messages: direct messages between Roleflow users (referrals, study partners,
 job-search buddies, and later recruiters and applicants).
 
 - Start a conversation by typing someone's account email.
 - Block someone: neither of you can message the other any more.
-- Report someone: the GAJ team gets an email and the person is blocked.
+- Report someone: the Roleflow team gets an email and the person is blocked.
 """
 
 from flask import (
@@ -86,7 +86,7 @@ def new_conversation():
     recipient = User.query.filter_by(email=email).first() if email else None
 
     if recipient is None:
-        flash("No GAJ account uses that email. Check the spelling, or invite them to GAJ.", "error")
+        flash("No Roleflow account uses that email. Check the spelling, or invite them to Roleflow.", "error")
         return redirect(url_for("messages.conversations", to=email))
 
     error = send_message(g.user, recipient, body)
@@ -182,7 +182,7 @@ def report(user_id):
 
     contact = current_app.config.get("CONTACT_EMAIL")
     if contact:
-        send_email(contact, f"GAJ report: user #{other.id}",
+        send_email(contact, f"Roleflow report: user #{other.id}",
                    f"User #{g.user.id} ({g.user.email}) reported user #{other.id} "
                    f"({other.email}).\n\nReason:\n{reason or '(none given)'}\n")
 

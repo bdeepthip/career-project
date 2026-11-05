@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 {% from "_icons.html" import icon %}
 
-{% block title %}Get A Job{% endblock %}
+{% block title %}Your job search{% endblock %}
 {% block public_main_class %}landing{% endblock %}
 {% block body_class %}theme-ink{% endblock %}
 
 {% block content %}
 <section class="landing-hero">
     <div class="landing-copy">
-        <h1 class="landing-wordmark">GAJ</h1>
-        <p class="landing-tagline">get a job.</p>
+        <h1 class="landing-wordmark">Roleflow</h1>
+        <p class="landing-tagline">From Job Search to Job Success.</p>
         <p class="landing-lead">
             Run your job search like a project. Track every application,
             see your week on a chart, move roles from Applied to Offer,
@@ -20,7 +20,7 @@
             <a class="btn btn-large btn-ghost" href="{{ url_for('auth.login') }}">Log in</a>
         </div>
         {% if config.BETA_INVITE_CODE %}
-        <p class="landing-beta">GAJ is in private beta. Sign-up needs the invite code from your invitation.</p>
+        <p class="landing-beta">Roleflow is in private beta. Sign-up needs the invite code from your invitation.</p>
         {% endif %}
     </div>
 
@@ -28,7 +28,7 @@
 </section>
 
 <section class="landing-features" aria-labelledby="features-title">
-    <h2 id="features-title" class="sr-only">What GAJ does</h2>
+    <h2 id="features-title" class="sr-only">What Roleflow does</h2>
     <ul>
         <li>
             {{ icon("board") }}
@@ -43,7 +43,7 @@
         <li>
             {{ icon("inbox") }}
             <h3>Emails that update themselves</h3>
-            <p>Forward job emails to your GAJ address and the matching status changes for you.</p>
+            <p>Forward job emails to your Roleflow address and the matching status changes for you.</p>
         </li>
         <li>
             {{ icon("match") }}
