@@ -1,5 +1,5 @@
 """
-Employer accounts: post jobs on GAJ and review the people who Easy Apply.
+Employer accounts: post jobs on Roleflow and review the people who Easy Apply.
 
 Each status change an employer makes (Reviewing, Interview, Offer,
 Rejected) is mirrored on the applicant's own Dashboard and sent to them
@@ -108,7 +108,7 @@ def tell_matching_seekers(job):
     for user_id, skills in skills_by_user.items():
         score, _, _ = calculate_match(skills, job.required_skills)
         if score >= NOTIFY_ABOUT_NEW_JOB_AT:
-            notify(user_id, "job", f"New on GAJ: {job.title} at {job.company} ({score}% match). "
+            notify(user_id, "job", f"New on Roleflow: {job.title} at {job.company} ({score}% match). "
                                    "You can Easy Apply.",
                    link=url_for("jobs.job_details", job_id=job.id))
             told += 1

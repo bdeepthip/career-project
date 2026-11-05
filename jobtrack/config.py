@@ -38,7 +38,7 @@ class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY")
 
     # Which database to use. On your laptop, leave DATABASE_URL unset and
-    # GAJ keeps using database.db in the project folder (SQLite).
+    # Roleflow keeps using database.db in the project folder (SQLite).
     # In production, set DATABASE_URL to your PostgreSQL address, e.g.
     #   postgresql://user:password@host:5432/jobtrack
     SQLALCHEMY_DATABASE_URI = database_url()
@@ -62,11 +62,11 @@ class Config:
     MAIL_PORT = int(os.environ.get("MAIL_PORT", "587"))
     MAIL_USERNAME = os.environ.get("MAIL_USERNAME", "")
     MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD", "")
-    MAIL_FROM = os.environ.get("MAIL_FROM", "GAJ <no-reply@localhost>")
+    MAIL_FROM = os.environ.get("MAIL_FROM", "Roleflow <no-reply@localhost>")
 
     PASSWORD_RESET_MAX_AGE = 60 * 60  # reset links expire after 1 hour
 
-    # Incoming email (each user's forwarding address, jt-xxxx@INBOUND_DOMAIN).
+    # Incoming email (each user's forwarding address, rf-xxxx@INBOUND_DOMAIN).
     # An email service receives mail for INBOUND_DOMAIN and posts each email to
     # /inbound/email with INBOUND_WEBHOOK_SECRET. Leave the secret empty and
     # the webhook stays switched off.

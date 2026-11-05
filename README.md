@@ -1,7 +1,7 @@
-# GAJ (Get A Job)
+# Roleflow
 
 A job search app: track every application, see how your skills match a
-job, Easy Apply to jobs employers post on GAJ, message other users, and
+job, Easy Apply to jobs employers post on Roleflow, message other users, and
 let job emails update your application statuses.
 
 ## Features
@@ -12,12 +12,12 @@ let job emails update your application statuses.
 - **Learning plan**: free courses and time estimates for missing skills
 - **Accounts**: password reset by email, change password (signs out
   other devices), download all your data, delete your account
-- **Inbox**: paste a job email; GAJ detects Applied / Interview /
+- **Inbox**: paste a job email; Roleflow detects Applied / Interview /
   Offer / Rejected, matches the company, and updates the application
   (never moving a status backwards)
-- **Forwarding address**: forward job emails to your private GAJ address
+- **Forwarding address**: forward job emails to your private Roleflow address
   and statuses update on their own
-- **Easy Apply**: apply to jobs posted on GAJ with your profile, resume
+- **Easy Apply**: apply to jobs posted on Roleflow with your profile, resume
   PDF and a note; withdraw any time
 - **Employer accounts**: post jobs, review applicants with a match score,
   download resumes, and move people through New → Reviewing → Interview →
@@ -26,7 +26,7 @@ let job emails update your application statuses.
 - **Notifications**: new messages, status changes, new jobs that match you
 - **Phone log-in**: log in with a text-message code (Twilio Verify)
 - **Daily line and screen time**: a new line of encouragement every day,
-  and a meter of active time on GAJ toward a 7-hour daily goal
+  and a meter of active time on Roleflow toward a 7-hour daily goal
 
 ## How it works
 
@@ -97,7 +97,7 @@ SendGrid form posts. Details:
 - Changing a password signs out every other device
 - Rate limits on log-in, sign-up and password reset: per network, and
   per account so a password can't be guessed from many addresses
-- Content-Security-Policy allows only GAJ's own scripts and styles
+- Content-Security-Policy allows only Roleflow's own scripts and styles
   (no inline JavaScript anywhere)
 - In production: HTTPS only (HSTS), secure cookies, and the app refuses
   to start with a short SECRET_KEY, a SQLite database, or no email server
@@ -119,7 +119,7 @@ in the terminal, so you can copy the link while developing.
 
 ## Database
 
-GAJ runs on **SQLite** on your laptop (`database.db`, no setup)
+Roleflow runs on **SQLite** on your laptop (`database.db`, no setup)
 and **PostgreSQL** in production. Set `DATABASE_URL` in `.env` to
 switch; nothing else changes.
 
@@ -136,7 +136,7 @@ migrations existed is upgraded in place, keeping all its data.
 
 ## Going live
 
-`LAUNCH.md` walks through putting GAJ online step by step: domain,
+`LAUNCH.md` walks through putting Roleflow online step by step: domain,
 hosting (Render), database (Neon), sending and receiving email, the
 live-site checklist, and inviting beta testers. It costs about $7 a
 month plus the domain.

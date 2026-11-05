@@ -152,7 +152,7 @@ def test_export_contains_own_data_only(client, auth):
     data = json.loads(response.data)
 
     forwarding = data["account"].pop("forwarding_address")
-    assert forwarding.startswith("gaj-") and forwarding.endswith("@in.jobtrack.test")
+    assert forwarding.startswith("rf-") and forwarding.endswith("@in.jobtrack.test")
     assert data["account"] == {"name": "Test User", "email": "test@example.com", "phone": None}
     assert [a["company"] for a in data["applications"]] == ["MyCo"]
     assert data["skills"] == ["Python"]

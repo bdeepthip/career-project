@@ -1,7 +1,7 @@
 """
-Screen time: how long each user actively spends on GAJ per day.
+Screen time: how long each user actively spends on Roleflow per day.
 
-The browser pings every 30 seconds while a GAJ tab is visible and the
+The browser pings every 30 seconds while a Roleflow tab is visible and the
 person has moved, typed or scrolled in the last 3 minutes. Each ping
 adds 30 seconds. Pings closer than 25 seconds apart (two open tabs)
 count once, so time is never double-counted.
@@ -76,7 +76,7 @@ def ping():
         row.last_ping = now.strftime(TIME_FORMAT)
         if before < DAILY_GOAL_SECONDS <= row.seconds:
             from .notifications import notify
-            notify(g.user.id, "goal", "You put in 7 hours on GAJ today. That's a full working day. "
+            notify(g.user.id, "goal", "You put in 7 hours on Roleflow today. That's a full working day. "
                                       "Rest well; tomorrow counts too.")
     db.session.commit()
 

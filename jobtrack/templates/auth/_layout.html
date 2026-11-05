@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% from "_icons.html" import icon %}
 
-{# Split screen for log in, sign up and password pages: GAJ on the left, the form on the right. #}
+{# Split screen for log in, sign up and password pages: Roleflow on the left, the form on the right. #}
 
 {% block public_header %}{% endblock %}
 {% block body_class %}auth{% endblock %}
@@ -9,8 +9,8 @@
 {% block public_flashes %}{% endblock %}
 
 {% block content %}
-<section class="auth-brand" aria-label="GAJ">
-    <a class="auth-wordmark" href="{{ url_for('auth.home') }}">GAJ</a>
+<section class="auth-brand" aria-label="Roleflow">
+    <a class="auth-wordmark" href="{{ url_for('auth.home') }}">Roleflow</a>
     <p class="auth-tagline">get a job.</p>
     <div class="auth-preview">{% include "_preview.html" %}</div>
     <figure class="auth-daily">

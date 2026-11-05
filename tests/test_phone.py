@@ -70,7 +70,7 @@ def test_number_can_only_belong_to_one_account(client, auth):
     link_phone(client); auth.logout()
     auth.register(email="b@example.com"); auth.login(email="b@example.com")
     page = client.post("/account/phone", data={"phone": PHONE}, follow_redirects=True).data
-    assert b"already linked to another GAJ account" in page
+    assert b"already linked to another Roleflow account" in page
     assert len(sms.outbox) == 1   # no text sent for the second account
 
 
@@ -182,5 +182,5 @@ def test_twilio_is_used_when_configured(tmp_path, monkeypatch):
         assert sms.check_code(E164, "123456") is True
     assert calls == [("Verifications", {"To": E164, "Channel": "sms"}),
                      ("VerificationCheck", {"To": E164, "Code": "123456"})]
-    assert sms.outbox == []   # Twilio sent it, not GAJ
+    assert sms.outbox == []   # Twilio sent it, not Roleflow
     wipe(app)

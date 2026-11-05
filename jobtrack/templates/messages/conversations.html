@@ -10,12 +10,12 @@
 
 <section class="panel compose">
     <h2>New message</h2>
-    <p class="muted small">Message anyone on GAJ by their account email: a friend for a referral,
+    <p class="muted small">Message anyone on Roleflow by their account email: a friend for a referral,
         a classmate who's also searching.</p>
     <form method="POST" action="{{ url_for('messages.new_conversation') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="form-group">
-            <label for="to">To (their GAJ email)</label>
+            <label for="to">To (their Roleflow email)</label>
             <input type="email" id="to" name="email" value="{{ to }}" placeholder="friend@example.com"
                    autocomplete="off" required>
         </div>

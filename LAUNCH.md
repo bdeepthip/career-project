@@ -1,6 +1,6 @@
-# Launching GAJ
+# Launching Roleflow
 
-A step-by-step guide to putting GAJ online at your own domain, with
+A step-by-step guide to putting Roleflow online at your own domain, with
 HTTPS, a real database, real email, and forwarding addresses that work.
 Plan about 2 hours. Do the steps in order: each one gives you a value
 the next one needs.
@@ -35,7 +35,7 @@ GitHub so `main` has everything, including this file.
 1. Create an account at cloudflare.com.
 2. Go to **Domain Registration → Register Domains** and search for a
    name. Short names like `getajob.com` are taken; try variations such as
-   `gajapp.com` or `getajobapp.com` and pick one that's available.
+   `roleflowapp.com` or `getroleflow.com` and pick one that's available.
 3. Buy it. The domain then shows in your Cloudflare dashboard, which
    also manages its DNS.
 
@@ -44,7 +44,7 @@ GitHub so `main` has everything, including this file.
 ## 3. Create the database (Neon)
 
 1. Sign up at neon.com (the Free plan needs no card).
-2. Create a project named `gaj`, in a **US East** region (close to
+2. Create a project named `roleflow`, in a **US East** region (close to
    Render's servers, so pages load fast).
 3. Click **Connect** and copy the connection string. It looks like
    `postgresql://user:password@ep-xxxx.us-east-2.aws.neon.tech/neondb?sslmode=require`.
@@ -67,14 +67,14 @@ GitHub so `main` has everything, including this file.
 1. Sign up at render.com with your GitHub account.
 2. Go to **New → Blueprint**, pick the `career-project` repository and
    branch `main`. Render reads `render.yaml` and lists one web service,
-   **gaj**.
+   **roleflow**.
 3. Render asks for the values marked `sync: false`. Fill them in:
 
    | Key | Value |
    |---|---|
    | `DATABASE_URL` | from step 3 |
    | `MAIL_PASSWORD` | from step 4 |
-   | `MAIL_FROM` | `GAJ <no-reply@yourdomain.com>` |
+   | `MAIL_FROM` | `Roleflow <no-reply@yourdomain.com>` |
    | `CONTACT_EMAIL` | `hello@yourdomain.com` (set up in step 7) |
    | `INBOUND_DOMAIN` | `yourdomain.com` |
    | `BETA_INVITE_CODE` | a code for your testers, e.g. `owls-beta`, or empty for open sign-up |
@@ -82,31 +82,31 @@ GitHub so `main` has everything, including this file.
 
    `SECRET_KEY` and `INBOUND_WEBHOOK_SECRET` are generated for you.
 4. Click **Apply**. Render installs packages, runs the database
-   migrations, adds the sample jobs, and starts GAJ.
-5. Open `https://gaj-xxxx.onrender.com/healthz`. It should show
+   migrations, adds the sample jobs, and starts Roleflow.
+5. Open `https://roleflow-xxxx.onrender.com/healthz`. It should show
    `{"status": "ok"}`.
 
-If the deploy fails, open the service's **Logs**. If GAJ refuses
+If the deploy fails, open the service's **Logs**. If Roleflow refuses
 to start, the log names the setting that's wrong.
 
 **Write down:** `INBOUND_WEBHOOK_SECRET`. In Render, open
-**gaj → Environment** and click to reveal it.
+**roleflow → Environment** and click to reveal it.
 
 ## 6. Use your domain (Render + Cloudflare)
 
-1. In Render, go to **gaj → Settings → Custom Domains** and add
+1. In Render, go to **roleflow → Settings → Custom Domains** and add
    `yourdomain.com` and `www.yourdomain.com`.
 2. Render shows the DNS records to create. Add them in **Cloudflare →
    DNS → Records**. Set **Proxy status** to **DNS only** (grey cloud)
    so Render can issue the HTTPS certificate.
 3. Wait for Render to show both domains as **Verified** with a
    certificate. This usually takes minutes, and can take up to an hour.
-4. Open `https://yourdomain.com`. You should see GAJ with the
+4. Open `https://yourdomain.com`. You should see Roleflow with the
    padlock.
 
 ## 7. Receive email (Cloudflare Email Routing)
 
-This makes the `gaj-...@yourdomain.com` addresses work. It also gives
+This makes the `rf-...@yourdomain.com` addresses work. It also gives
 you `hello@yourdomain.com` delivered to your own Gmail.
 
 1. In **Cloudflare → yourdomain.com → Email → Email Routing**, click
@@ -117,7 +117,7 @@ you `hello@yourdomain.com` delivered to your own Gmail.
    → **Send to an email** → your Gmail.
 4. Create the Worker:
    1. Go to **Workers & Pages → Create → Worker**, name it
-      `gaj-email`, and deploy the starter.
+      `roleflow-email`, and deploy the starter.
    2. Click **Edit code**, replace everything with the contents of
       `deploy/cloudflare-email-worker.js`, and click **Deploy**.
    3. Go to **Settings → Variables and Secrets** and add:
@@ -125,11 +125,11 @@ you `hello@yourdomain.com` delivered to your own Gmail.
       - `INBOUND_SECRET` = the `INBOUND_WEBHOOK_SECRET` from Render
         (choose type **Secret**)
 5. Back in **Email Routing → Routing rules**, edit **Catch-all address**:
-   set the action to **Send to a Worker**, choose `gaj-email`, and
+   set the action to **Send to a Worker**, choose `roleflow-email`, and
    enable it.
 
 The specific `hello@` rule wins over the catch-all, so only other
-addresses (the `gaj-` ones) go to GAJ.
+addresses (the `rf-` ones) go to Roleflow.
 
 ## 7b. Text-message log-in codes (Twilio, optional)
 
@@ -138,15 +138,15 @@ Everything else works without it.
 
 1. Sign up at twilio.com (the free trial needs no card).
 2. In the Console, go to **Verify → Services → Create new**, name it
-   `GAJ`, tick **SMS**, and create it.
-3. Copy three values into Render (**gaj → Environment**):
+   `Roleflow`, tick **SMS**, and create it.
+3. Copy three values into Render (**roleflow → Environment**):
    - `TWILIO_ACCOUNT_SID` (on the Console home page, starts with `AC`)
    - `TWILIO_AUTH_TOKEN` (on the same page; keep it secret)
    - `TWILIO_VERIFY_SERVICE_SID` (on the Verify service, starts with `VA`)
 4. Trial accounts can only text numbers you've verified in Twilio.
    Upgrade the account before inviting testers.
 
-GAJ only texts US and Canadian numbers, and limits how many codes one
+Roleflow only texts US and Canadian numbers, and limits how many codes one
 number can get. That protects you from bots that rack up texting bills.
 
 ## 8. Test everything on the live site
@@ -156,7 +156,7 @@ Use a test account first, then your real one.
 - [ ] `https://yourdomain.com` loads with the padlock, and `http://` redirects to `https://`
 - [ ] Create an account (with the invite code, if you set one), then log in
 - [ ] **Forgot password** sends a real email, and its link opens a `https://yourdomain.com/...` page
-- [ ] Inbox: add the address in Gmail as a forwarding address. The confirmation code appears in GAJ's Inbox within a minute
+- [ ] Inbox: add the address in Gmail as a forwarding address. The confirmation code appears in Roleflow's Inbox within a minute
 - [ ] Add an application for a company, then forward one of that company's emails to your address. The status updates
 - [ ] Email `hello@yourdomain.com` from another account. It arrives in your Gmail
 - [ ] If you set up Twilio: Account → add your phone, enter the texted code, log out, then log in with **Phone**
@@ -165,7 +165,7 @@ Use a test account first, then your real one.
 - [ ] Account: **Download my data** works
 - [ ] Delete the test account
 - [ ] The Privacy and Terms pages show your contact email
-- [ ] The browser tab shows the GAJ icon, and `https://yourdomain.com/robots.txt` loads
+- [ ] The browser tab shows the Roleflow icon, and `https://yourdomain.com/robots.txt` loads
 - [ ] A new account's Dashboard shows **Get set up**, and the steps tick off as you do them
 
 ## 9. Invite beta testers
@@ -179,7 +179,7 @@ Use a test account first, then your real one.
    `https://yourdomain.com/register?invite=YOUR-CODE`
 3. Before you share the site on LinkedIn, paste `https://yourdomain.com`
    into LinkedIn's Post Inspector (linkedin.com/post-inspector). It
-   should show the GAJ preview image and title. If it shows an old
+   should show the Roleflow preview image and title. If it shows an old
    preview, click **Inspect** again to refresh it.
 4. Read the feedback weekly and fix the most common problem first.
 
