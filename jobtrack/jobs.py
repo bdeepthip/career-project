@@ -11,7 +11,7 @@ from .auth import login_required
 from .matching import (
     build_learning_plan, calculate_match, extract_skills, get_user_skills
 )
-from .models import Job, Submission, db
+from .models import Job, Submission, db, ResumeVersion
 from .profile import DOMAINS
 from .validation import clean
 
@@ -91,6 +91,13 @@ def job_details(job_id):
     learning_plan, total_hours = build_learning_plan(missing)
     submission = (Submission.query.filter_by(job_id=job.id, applicant_id=g.user.id).first()
                   if job.easy_apply else None)
+    tailored, tailored_score = None, None
+    if not g.user.is_employer:
+        from .builder import version_score
+        tailored = (ResumeVersion.query.filter_by(user_id=g.user.id, job_id=job.id)
+                    .order_by(ResumeVersion.updated_at.desc()).first())
+        if tailored:
+            tailored_score = version_score(tailored)["score"]
 
     return render_template(
         "jobs/job_details.html",
@@ -102,6 +109,8 @@ def job_details(job_id):
         learning_plan=learning_plan,
         total_hours=total_hours,
         has_skills=bool(user_skills),
+        tailored=tailored,
+        tailored_score=tailored_score,
     )
 
 

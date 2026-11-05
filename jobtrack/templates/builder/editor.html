@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}{{ version.name }}{% endblock %}
+{% block main_class %}page-wide{% endblock %}
+
+{% macro field(name, label, value, max, kind="text", placeholder="", hint="") -%}
+<div class="form-group">
+    <label for="{{ name }}">{{ label }}</label>
+    {% if kind == "area" %}
+    <textarea id="{{ name }}" name="{{ name }}" maxlength="{{ max }}" placeholder="{{ placeholder }}">{{ value }}</textarea>
+    {% else %}
+    <input type="text" id="{{ name }}" name="{{ name }}" value="{{ value }}" maxlength="{{ max }}" placeholder="{{ placeholder }}">
+    {% endif %}
+    {% if hint %}<p class="field-hint">{{ hint }}</p>{% endif %}
+</div>
+{%- endmacro %}
+
+{% block content %}
+
+<a class="back-link" href="{{ url_for('builder.resumes') }}">← All resumes</a>
+
+<form method="POST" class="builder" id="builder-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="builder-main">
+        <div class="builder-head">
+            <label class="sr-only" for="version_name">Resume name</label>
+            <input class="builder-name" type="text" id="version_name" name="version_name"
+                   value="{{ version.name }}" maxlength="80">
+            <div class="dash-actions">
+                <a class="btn btn-secondary" href="{{ url_for('builder.resume_pdf', version_id=version.id) }}">{{ icon("download") }}Download PDF</a>
+                <button class="btn" type="submit">Save</button>
+            </div>
+        </div>
+        <p class="lede">Changes here only change this resume. Your profile stays as it is.</p>
+
+        <section class="panel builder-section">
+            <h2>Header</h2>
+            <div class="form-row">
+                {{ field("name", "Full name", content.name, 100) }}
+                {{ field("headline", "Headline", content.headline, 150, placeholder="Example: Software Engineer, Python and data") }}
+            </div>
+            <div class="form-row">
+                {{ field("email", "Email", content.email, 254) }}
+                {{ field("phone", "Phone", content.phone, 40) }}
+            </div>
+            <div class="form-row">
+                {{ field("location", "Location", content.location, 100, placeholder="Example: Philadelphia, PA") }}
+                {{ field("links", "Links", content.links, 300, placeholder="linkedin.com/in/you | github.com/you", hint="Separate links with |") }}
+            </div>
+        </section>
+
+        <section class="panel builder-section">
+            <h2>Summary</h2>
+            {{ field("summary", "Two or three sentences about you", content.summary, 1500, "area") }}
+        </section>
+
+        <section class="panel builder-section">
+            <h2>Skills</h2>
+            {{ field("skills", "Skills, separated by commas", content.skills, 1500, "area",
+                     hint="Most ATS systems look for exact skill names, like \"PostgreSQL\" or \"Machine Learning\".") }}
+        </section>
+
+        {% for section, title, singular in [("experience", "Experience", "job"), ("projects", "Projects", "project"), ("education", "Education", "school")] %}
+        {% set entries = content[section] %}
+        {% set most = sections[section][1] %}
+        <section class="panel builder-section" id="{{ section }}">
+            <h2>{{ title }}</h2>
+            {% for i in range([entries | length + 1, most] | min) %}
+            {% set entry = entries[i] if i < entries | length else {} %}
+            {% set p = section ~ "-" ~ i ~ "-" %}
+            <fieldset class="entry{{ ' is-new' if not entry }}">
+                <legend>{{ ("Add a " ~ singular) if not entry else (entry.title or entry.name or entry.school or entry.org or ("Entry " ~ (i + 1))) }}</legend>
+                {% if section == "experience" %}
+                <div class="form-row">
+                    {{ field(p ~ "title", "Job title", entry.title, 120) }}
+                    {{ field(p ~ "org", "Company", entry.org, 120) }}
+                </div>
+                <div class="form-row">
+                    {{ field(p ~ "location", "Location", entry.location, 100) }}
+                    {{ field(p ~ "dates", "Dates", entry.dates, 60, placeholder="Jun 2023 – Aug 2025") }}
+                </div>
+                {{ field(p ~ "bullets", "What you did, one point per line", entry.bullets, 3000, "area",
+                         placeholder="Built and maintained 50 production data pipelines…",
+                         hint="Start each line with a verb and include a number when you can.") }}
+                {% elif section == "projects" %}
+                <div class="form-row">
+                    {{ field(p ~ "name", "Project name", entry.name, 120) }}
+                    {{ field(p ~ "tech", "Built with", entry.tech, 200, placeholder="Python, Flask, PostgreSQL") }}
+                </div>
+                {{ field(p ~ "dates", "Dates", entry.dates, 60, placeholder="2026") }}
+                {{ field(p ~ "bullets", "What it does and what you built, one point per line", entry.bullets, 2000, "area") }}
+                {% else %}
+                <div class="form-row">
+                    {{ field(p ~ "school", "School", entry.school, 150) }}
+                    {{ field(p ~ "dates", "Dates", entry.dates, 60, placeholder="2025 – 2027") }}
+                </div>
+                {{ field(p ~ "degree", "Degree", entry.degree, 200, placeholder="Master of Science, Computer Science") }}
+                {{ field(p ~ "details", "Details (optional)", entry.details, 400, placeholder="Relevant coursework: Algorithms, Database Systems") }}
+                {% endif %}
+                {% if entry %}
+                <label class="checkbox"><input type="checkbox" name="{{ p }}remove" value="1"> Remove this {{ singular }}</label>
+                {% endif %}
+            </fieldset>
+            {% endfor %}
+            {% if entries | length >= most %}
+            <p class="field-hint">That's the most {{ title | lower }} a resume holds here.</p>
+            {% else %}
+            <p class="field-hint">Fill in the empty {{ singular }} and save to add it. Another empty one appears after.</p>
+            {% endif %}
+        </section>
+        {% endfor %}
+
+        <section class="panel builder-section">
+            <h2>Certifications</h2>
+            {{ field("certifications", "One per line", content.certifications, 800, "area") }}
+        </section>
+
+        <div class="builder-save">
+            <button class="btn" type="submit">Save resume</button>
+            <a class="btn btn-secondary" href="{{ url_for('builder.resume_pdf', version_id=version.id) }}">{{ icon("download") }}Download PDF</a>
+        </div>
+    </div>
+
+    <aside class="builder-side" id="match" aria-labelledby="match-title">
+        <div class="panel match-panel">
+            <h2 id="match-title">Keyword match</h2>
+
+            {% if version.job %}
+            <p class="match-target">For <a href="{{ url_for('jobs.job_details', job_id=version.job.id) }}">{{ version.job.title }}</a> at {{ version.job.company }}</p>
+            {% else %}
+            <label for="target_text">Job description</label>
+            <textarea id="target_text" name="target_text" maxlength="20000" class="target-text"
+                      placeholder="Paste the full job description here, then choose Check match.">{{ version.target_text or "" }}</textarea>
+            <button class="btn btn-small btn-block" type="submit" name="after_save" value="match">Save and check match</button>
+            {% endif %}
+
+            {% if result.score is not none %}
+            {% set level = 'high' if result.score >= 75 else ('mid' if result.score >= 50 else 'low') %}
+            <div class="match-meter match-{{ level }}">
+                <p class="match-number">{{ result.score }}<span>%</span></p>
+                <p class="match-caption">{{ result.found | length }} of {{ result.total }} job keywords are on this resume</p>
+                <progress max="100" value="{{ result.score }}" aria-label="Keyword match">{{ result.score }}%</progress>
+            </div>
+
+            {% if result.missing %}
+            <h3>Missing</h3>
+            <ul class="keyword-chips">
+                {% for k in result.missing %}<li class="chip-missing">{{ k }}</li>{% endfor %}
+            </ul>
+            <p class="match-advice">Add a keyword only where it's true for you: skills in <strong>Skills</strong>,
+                and work you did in a bullet under <strong>Experience</strong> or <strong>Projects</strong>.
+                If you don't have one yet, leave it out; recruiters ask about everything on a resume.</p>
+            {% else %}
+            <p class="match-advice">Every keyword is there. Read it once more as a person would: clear, true and specific beats long.</p>
+            {% endif %}
+
+            {% if result.found %}
+            <h3>Found</h3>
+            <ul class="keyword-chips">
+                {% for k in result.found %}<li class="chip-found">{{ k }}</li>{% endfor %}
+            </ul>
+            {% endif %}
+
+            <p class="footnote">The match counts the job's skills and repeated phrases that appear on this resume.
+                Real ATS systems each work differently, so treat it as a guide, not a grade.</p>
+            {% elif not version.job %}
+            <p class="match-advice">Paste a job description to see which of its keywords this resume has and which are missing.</p>
+            {% endif %}
+        </div>
+    </aside>
+</form>
+
+{% endblock %}

@@ -301,6 +301,28 @@ class Resume(RowAccessMixin, db.Model):
     uploaded_at: Mapped[str] = mapped_column(Text, nullable=False)
 
 
+class ResumeVersion(RowAccessMixin, db.Model):
+    """A resume built inside Roleflow. Starts as a copy of the profile,
+    then the user edits it freely (often one version per job) without
+    touching the profile. The content is one JSON document, because the
+    sections are always read and saved together."""
+    __tablename__ = "resume_versions"
+    __table_args__ = (Index("idx_resume_versions_user", "user_id"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    name: Mapped[str] = mapped_column(Text, nullable=False)
+    # The job this version is tailored for (a job on Roleflow), if any
+    job_id: Mapped[int | None] = mapped_column(ForeignKey("jobs.id", ondelete="SET NULL"))
+    # Or a job description pasted in, for jobs found elsewhere
+    target_text: Mapped[str | None] = mapped_column(Text)
+    content_json: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[str] = mapped_column(Text, nullable=False)
+    updated_at: Mapped[str] = mapped_column(Text, nullable=False)
+
+    job = relationship("Job")
+
+
 class Submission(RowAccessMixin, db.Model):
     """An Easy Apply application: what the seeker sent to the employer.
     Keeps its own copy of the resume and profile as they were when sent,

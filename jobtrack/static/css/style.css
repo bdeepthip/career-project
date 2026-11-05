@@ -2578,3 +2578,160 @@ a.panel-meta:hover { text-decoration: underline; }
 [data-theme="light"] .monogram-4 { background: #eef3e4; color: #4f6630; }
 [data-theme="light"] .monogram-5 { background: #f0edf6; color: #5e5482; }
 .setup-mark .icon { width: 16px; height: 16px; stroke-width: 2.4; }
+
+
+/* =========================================================
+   Resume builder
+   ========================================================= */
+
+.resume-list {
+    list-style: none;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+}
+
+.resume-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 18px;
+}
+
+.resume-row + .resume-row { border-top: 1px solid var(--line); }
+.resume-main { display: flex; align-items: center; gap: 14px; min-width: 0; color: var(--text); text-decoration: none; }
+.resume-main:hover strong { text-decoration: underline; }
+.resume-icon-doc { display: grid; place-items: center; width: 40px; height: 40px; flex: none; border-radius: 10px; background: var(--action-soft); color: var(--action-text); }
+.resume-text { display: flex; flex-direction: column; min-width: 0; }
+.resume-text strong { color: var(--heading); }
+.resume-text small { color: var(--muted); font-size: 13.5px; }
+.resume-actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+
+.score-pill { padding: 3px 11px; border-radius: 999px; font-size: 13.5px; font-weight: 700; }
+.score-high { background: var(--green-soft); color: var(--green-text); }
+.score-mid { background: var(--marigold-soft); color: var(--marigold-text); }
+.score-low { background: var(--red-soft); color: var(--red-text); }
+
+/* Editor: the form on the left, the keyword match beside it */
+.builder {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 24px;
+    align-items: start;
+}
+
+.builder-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+
+.builder-name {
+    max-width: 520px;
+    padding: 4px 8px;
+    margin-left: -8px;
+    border-color: transparent;
+    background: transparent;
+    color: var(--heading);
+    font-size: 26px;
+    font-weight: 720;
+    letter-spacing: -0.02em;
+}
+
+.builder-name:hover { border-color: var(--line-strong); }
+.builder .lede { margin: 4px 0 18px; color: var(--muted); }
+.builder-section { margin-bottom: 16px; }
+.builder-section > h2 { margin-bottom: 14px; font-size: 17px; }
+
+.entry {
+    margin: 0 0 14px;
+    padding: 14px 16px 4px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface-2);
+}
+
+.entry legend { padding: 0 6px; color: var(--heading); font-size: 14px; font-weight: 650; }
+.entry.is-new { border-style: dashed; background: transparent; }
+.entry.is-new legend { color: var(--muted); }
+.entry textarea { min-height: 110px; }
+.entry .checkbox { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
+
+.builder-save { display: flex; gap: 10px; margin: 6px 0 24px; }
+
+.builder-side { position: sticky; top: 20px; }
+.match-panel h2 { font-size: 17px; margin-bottom: 10px; }
+.match-panel h3 { margin: 18px 0 8px; font-size: 14px; color: var(--muted); font-weight: 650; }
+.match-target { color: var(--muted); font-size: 14.5px; }
+.target-text { min-height: 150px; margin-bottom: 10px; font-size: 14px; }
+
+.match-meter { margin-top: 16px; padding: 16px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line); }
+.match-number { color: var(--heading); font-size: 48px; font-weight: 760; font-stretch: 82%; line-height: 1; letter-spacing: -0.02em; }
+.match-number span { margin-left: 2px; font-size: 24px; color: var(--muted); }
+.match-caption { margin: 6px 0 10px; color: var(--muted); font-size: 13.5px; }
+.match-high progress::-webkit-progress-value { background: var(--green); }
+.match-high progress::-moz-progress-bar { background: var(--green); }
+.match-mid progress::-webkit-progress-value { background: var(--marigold); }
+.match-mid progress::-moz-progress-bar { background: var(--marigold); }
+.match-low progress::-webkit-progress-value { background: var(--red); }
+.match-low progress::-moz-progress-bar { background: var(--red); }
+.match-meter progress { background: var(--sunken); }
+.match-meter progress::-webkit-progress-bar { background: var(--sunken); }
+
+.keyword-chips { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; }
+.keyword-chips li { padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: 550; }
+.chip-missing { border: 1px dashed var(--red-line); background: var(--red-soft); color: var(--red-text); }
+.chip-found { background: var(--green-soft); color: var(--green-text); }
+.match-advice { margin-top: 12px; color: var(--muted); font-size: 13.5px; line-height: 1.5; }
+.match-panel .footnote { margin-top: 16px; font-size: 12.5px; }
+
+/* Job page: tailor a resume */
+.tailor-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin-top: 18px;
+    padding: 18px 20px;
+    border: 1px solid var(--action-line);
+    border-radius: var(--radius);
+    background: var(--action-soft);
+}
+.tailor-box h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 4px; color: var(--heading); font-size: 16px; }
+.tailor-box h3 .icon { width: 18px; height: 18px; color: var(--action-text); }
+.tailor-box p { color: var(--text); font-size: 14.5px; }
+
+/* Easy Apply: pick which resume to send */
+.resume-choices { display: grid; gap: 8px; margin: 10px 0 12px; border: 0; }
+.resume-choice {
+    display: grid;
+    grid-template-columns: auto auto minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+    padding: 10px 14px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-small);
+    cursor: pointer;
+    font-weight: 500;
+}
+.resume-choice input { width: auto; }
+.resume-choice strong { display: block; color: var(--heading); }
+.resume-choice small { display: block; color: var(--muted); font-size: 13px; font-weight: 400; }
+.resume-choice:has(input:checked) { border-color: var(--action); background: var(--action-soft); }
+.resume-choice .resume-icon { width: 34px; height: 40px; font-size: 10px; }
+.resume-choice .resume-icon .icon { width: 16px; height: 16px; }
+
+@media (max-width: 1080px) {
+    .builder { grid-template-columns: 1fr; }
+    .builder-side { position: static; order: -1; }
+}
+
+@media (max-width: 640px) {
+    .resume-row { grid-template-columns: minmax(0, 1fr) auto; }
+    .resume-actions { grid-column: 1 / -1; justify-content: flex-start; }
+    .builder-head { flex-wrap: wrap; }
+    .builder-name { font-size: 22px; }
+    .tailor-box { flex-direction: column; align-items: flex-start; }
+}
+.builder-head .builder-name { flex: 1; min-width: 0; }
+.builder-head .dash-actions { flex-wrap: nowrap; flex: none; }
+@media (max-width: 640px) { .builder-head .dash-actions { flex-wrap: wrap; } }

@@ -75,6 +75,7 @@
         {{ nav_item("applications.dashboard", "Dashboard", "dashboard", ep.startswith("applications.") and ep != "applications.board") }}
         {{ nav_item("applications.board", "Board", "board", ep == "applications.board") }}
         {{ nav_item("jobs.jobs", "Jobs", "jobs", ep in ("jobs.jobs", "jobs.job_details")) }}
+        {{ nav_item("builder.resumes", "Resumes", "resume", ep.startswith("builder.")) }}
         {{ nav_item("profile.profile", "Profile", "profile", ep.startswith("profile.")) }}
         {{ nav_item("messages.conversations", "Messages", "messages", ep.startswith("messages."), unread_messages) }}
         {{ nav_item("notifications.notifications", "Notifications", "notifications", ep.startswith("notifications."), unread_notifications) }}
