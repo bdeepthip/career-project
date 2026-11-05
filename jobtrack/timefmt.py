@@ -51,7 +51,7 @@ def time_ago(value, now=None):
 
 
 def time_ago_utc(value, now=None):
-    """For times GAJ stored in UTC (messages, notifications): compare in the
+    """For times Roleflow stored in UTC (messages, notifications): compare in the
     viewer's own time zone, so 'yesterday' means their yesterday."""
     from datetime import timedelta, timezone
     from flask import has_request_context, session

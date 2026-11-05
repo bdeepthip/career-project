@@ -32,7 +32,7 @@ def safe_filename(name):
 
 
 def pdf_download(filename, data):
-    """Always a download (never shown inline in GAJ's own pages)."""
+    """Always a download (never shown inline in Roleflow's own pages)."""
     return Response(data, mimetype="application/pdf", headers={
         "Content-Disposition": f'attachment; filename="{safe_filename(filename)}"',
         "X-Content-Type-Options": "nosniff",

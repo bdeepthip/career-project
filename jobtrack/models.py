@@ -50,7 +50,7 @@ class User(RowAccessMixin, db.Model):
     name: Mapped[str] = mapped_column(Text, nullable=False)
     email: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
     password: Mapped[str] = mapped_column(Text, nullable=False)  # a hash, never plain text
-    # The secret part of this user's forwarding address: jt-<token>@INBOUND_DOMAIN
+    # The secret part of this user's forwarding address: rf-<token>@INBOUND_DOMAIN
     inbound_token: Mapped[str | None] = mapped_column(
         Text, default=new_inbound_token)
     # Verified mobile number for logging in by text code, "+12155550123".
@@ -159,7 +159,7 @@ class Job(RowAccessMixin, db.Model):
     description: Mapped[str | None] = mapped_column(Text)
     job_url: Mapped[str | None] = mapped_column(Text)
     posted_date: Mapped[str | None] = mapped_column(Text)
-    # Set for jobs posted on GAJ by an employer account (these take Easy Apply).
+    # Set for jobs posted on Roleflow by an employer account (these take Easy Apply).
     # Empty for listings that live on a company's own site.
     posted_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"))
     is_open: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default="1")
@@ -213,7 +213,7 @@ class JobEmail(RowAccessMixin, db.Model):
 
 
 class UserActivity(RowAccessMixin, db.Model):
-    """Time spent actively using GAJ, per user per day (the screen-time meter)."""
+    """Time spent actively using Roleflow, per user per day (the screen-time meter)."""
     __tablename__ = "user_activity"
     __table_args__ = (UniqueConstraint("user_id", "day", name="uq_activity_user_day"),)
 
@@ -238,7 +238,7 @@ class PhoneCode(RowAccessMixin, db.Model):
 
 
 class Message(RowAccessMixin, db.Model):
-    """A direct message between two GAJ users."""
+    """A direct message between two Roleflow users."""
     __tablename__ = "messages"
     __table_args__ = (
         Index("idx_messages_pair", "sender_id", "recipient_id"),
@@ -265,7 +265,7 @@ class Block(RowAccessMixin, db.Model):
 
 
 class Report(RowAccessMixin, db.Model):
-    """A user reported another user's messages, for the GAJ team to review."""
+    """A user reported another user's messages, for the Roleflow team to review."""
     __tablename__ = "reports"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -284,7 +284,7 @@ class Notification(RowAccessMixin, db.Model):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     kind: Mapped[str] = mapped_column(Text, nullable=False)       # message, status, inbox, goal, ...
     text: Mapped[str] = mapped_column(Text, nullable=False)
-    link: Mapped[str | None] = mapped_column(Text)                # a GAJ path, e.g. /messages/4
+    link: Mapped[str | None] = mapped_column(Text)                # a Roleflow path, e.g. /messages/4
     created_at: Mapped[str] = mapped_column(Text, nullable=False)
     read_at: Mapped[str | None] = mapped_column(Text)
 

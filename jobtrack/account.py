@@ -83,7 +83,7 @@ def _rows(model, fields, order_by=None):
 @bp.route("/account/export")
 @login_required
 def export_data():
-    """Download everything GAJ stores about you, as JSON."""
+    """Download everything Roleflow stores about you, as JSON."""
     profile = Profile.query.filter_by(user_id=g.user.id).first()
     profile_fields = ["headline", "phone", "location", "domain", "target_role",
                       "experience_level", "preferred_location", "about"]
@@ -129,7 +129,7 @@ def export_data():
         ],
     }
 
-    filename = f"gaj-export-{date.today().isoformat()}.json"
+    filename = f"roleflow-export-{date.today().isoformat()}.json"
     return Response(
         json.dumps(data, indent=2, ensure_ascii=False),
         mimetype="application/json",

@@ -1,5 +1,5 @@
 """
-Easy Apply: apply to a job posted on GAJ in one step. GAJ sends the
+Easy Apply: apply to a job posted on Roleflow in one step. Roleflow sends the
 employer your profile, your resume PDF and an optional note, and adds the
 job to your Dashboard as Applied. When the employer updates your status,
 your Dashboard updates and you get a notification.
@@ -99,7 +99,7 @@ def easy_apply(job_id):
         tracked = JobApplication(
             user_id=g.user.id, company=job.company, job_title=job.title, location=job.location,
             job_url=url_for("jobs.job_details", job_id=job.id), date_applied=date.today().isoformat(),
-            status="Applied", notes="Applied with Easy Apply on GAJ",
+            status="Applied", notes="Applied with Easy Apply on Roleflow",
         )
         db.session.add(tracked)
         db.session.flush()
@@ -161,7 +161,7 @@ def report_job(job_id):
     db.session.commit()
     contact = current_app.config.get("CONTACT_EMAIL")
     if contact:
-        send_email(contact, f"GAJ report: job #{job.id}",
+        send_email(contact, f"Roleflow report: job #{job.id}",
                    f"User #{g.user.id} ({g.user.email}) reported job #{job.id} "
                    f"'{job.title}' at {job.company}, posted by user #{job.posted_by_user_id}.\n\n"
                    f"Reason:\n{reason or '(none given)'}\n")

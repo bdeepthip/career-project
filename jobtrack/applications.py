@@ -47,13 +47,13 @@ def setup_steps(user_id, total):
          "text": "Every job you apply to, in one list and on the board.",
          "url": url_for("applications.add_application"), "action": "Add application"},
         {"title": "Add your skills", "done": has(Skill),
-         "text": "GAJ uses them to show how well you match each job.",
+         "text": "Roleflow uses them to show how well you match each job.",
          "url": url_for("profile.profile"), "action": "Open profile"},
         {"title": "Upload your resume", "done": has(Resume),
          "text": "Saved once, then sent with every Easy Apply.",
          "url": url_for("profile.profile"), "action": "Open profile"},
         {"title": "Forward one job email", "done": has(JobEmail),
-         "text": "Use your GAJ address and the matching status updates itself.",
+         "text": "Use your Roleflow address and the matching status updates itself.",
          "url": url_for("inbox.inbox"), "action": "Open inbox"},
     ]
 

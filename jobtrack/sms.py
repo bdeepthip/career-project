@@ -5,7 +5,7 @@ Production: Twilio Verify sends and checks the codes (set TWILIO_ACCOUNT_SID,
 TWILIO_AUTH_TOKEN and TWILIO_VERIFY_SERVICE_SID). About 6 cents per
 successful code in the US; no phone number to rent.
 
-Your laptop (no Twilio settings): GAJ makes the code itself and prints it
+Your laptop (no Twilio settings): Roleflow makes the code itself and prints it
 in the terminal, like password reset emails. On a production server
 without Twilio, phone log-in is simply switched off, so codes never end
 up in server logs.
@@ -94,7 +94,7 @@ def _twilio(path, fields):
         return json.loads(response.read().decode())
 
 
-# ---------- GAJ's own codes (development) ----------
+# ---------- Roleflow's own codes (development) ----------
 
 def _hash(phone, code):
     key = current_app.config["SECRET_KEY"].encode()
@@ -125,7 +125,7 @@ def send_code(phone):
     ))
     db.session.commit()
 
-    text = f"Your GAJ code is {code}. It expires in 10 minutes."
+    text = f"Your Roleflow code is {code}. It expires in 10 minutes."
     if current_app.testing:
         outbox.append((phone, text))
     else:

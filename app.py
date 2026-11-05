@@ -1,5 +1,5 @@
 """
-Start GAJ on your laptop:
+Start Roleflow on your laptop:
 
     python app.py
 

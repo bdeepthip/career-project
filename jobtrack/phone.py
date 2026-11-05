@@ -66,7 +66,7 @@ def login_phone():
 
         session["login_phone"] = phone
         session["login_next"] = safe_next(request.args.get("next"))
-        flash(f"If {masked_phone(phone)} is linked to a GAJ account, we just texted it a "
+        flash(f"If {masked_phone(phone)} is linked to a Roleflow account, we just texted it a "
               "6-digit code.", "success")
         return redirect(url_for("phone.login_phone_code"))
 
@@ -110,7 +110,7 @@ def add_phone():
 
     owner = User.query.filter_by(phone=phone).first()
     if owner is not None and owner.id != g.user.id:
-        flash("That number is already linked to another GAJ account.", "error")
+        flash("That number is already linked to another Roleflow account.", "error")
         return redirect(url_for("account.settings") + "#phone")
 
     try:
@@ -142,7 +142,7 @@ def verify_phone():
             db.session.commit()
         except IntegrityError:   # someone else verified the same number a moment ago
             db.session.rollback()
-            flash("That number is already linked to another GAJ account.", "error")
+            flash("That number is already linked to another Roleflow account.", "error")
             return redirect(url_for("account.settings") + "#phone")
 
         session.pop("pending_phone", None)
