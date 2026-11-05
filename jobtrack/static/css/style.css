@@ -2577,3 +2577,4 @@ a.panel-meta:hover { text-decoration: underline; }
 [data-theme="light"] .monogram-3 { background: #fbeeee; color: #8e4343; }
 [data-theme="light"] .monogram-4 { background: #eef3e4; color: #4f6630; }
 [data-theme="light"] .monogram-5 { background: #f0edf6; color: #5e5482; }
+.setup-mark .icon { width: 16px; height: 16px; stroke-width: 2.4; }
