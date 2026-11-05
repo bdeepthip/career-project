@@ -122,6 +122,21 @@ def create_app(config_class=None):
     app.add_template_filter(time_ago_utc, "time_ago_utc")
     app.add_template_filter(month_label, "month_label")
 
+    @app.route("/favicon.ico")
+    @limiter.exempt
+    def favicon():
+        # Browsers ask for /favicon.ico at the site root even when the
+        # page names another icon
+        return app.send_static_file("favicon.ico")
+
+    @app.route("/robots.txt")
+    @limiter.exempt
+    def robots():
+        # Search engines may index the public pages; everything behind
+        # log-in redirects to the log-in page anyway
+        body = "User-agent: *\nAllow: /\nDisallow: /inbound/\n"
+        return body, 200, {"Content-Type": "text/plain; charset=utf-8"}
+
     @app.route("/healthz")
     @limiter.exempt
     def healthz():
@@ -144,18 +159,21 @@ def register_error_pages(app):
     @app.errorhandler(404)
     def not_found(error):
         return render_template("errors/error.html",
+                               code=404,
                                title="Page not found",
                                message="That page doesn't exist or was moved."), 404
 
     @app.errorhandler(413)
     def too_large(error):
         return render_template("errors/error.html",
+                               code=413,
                                title="Too much text",
                                message="That submission is too large. Shorten it and try again."), 413
 
     @app.errorhandler(429)
     def too_many_requests(error):
         return render_template("errors/error.html",
+                               code=429,
                                title="Too many attempts",
                                message="Too many attempts from your connection. "
                                        "Wait a few minutes and try again."), 429
@@ -163,12 +181,14 @@ def register_error_pages(app):
     @app.errorhandler(CSRFError)
     def csrf_failed(error):
         return render_template("errors/error.html",
+                               code=400,
                                title="Form expired",
                                message="Your form session expired. Go back, refresh the page, and try again."), 400
 
     @app.errorhandler(500)
     def server_error(error):
         return render_template("errors/error.html",
+                               code=500,
                                title="Something went wrong",
                                message="An unexpected error happened. Try again in a moment."), 500
 

@@ -1,12 +1,28 @@
 {% from "_icons.html" import icon %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="{{ 'light' if request.cookies.get('theme') == 'light' else 'dark' }}">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{% block title %}Get A Job{% endblock %} | GAJ</title>
+    {% set page_description = "GAJ (Get A Job) helps you run your job search like a project: track every application, chart your week, move roles from Applied to Offer, and let job emails update your statuses." %}
+    <meta name="description" content="{{ page_description }}">
+    <meta name="theme-color" content="#0a0c1d">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" sizes="any">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon-32.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="GAJ">
+    <meta property="og:title" content="GAJ: get a job">
+    <meta property="og:description" content="{{ page_description }}">
+    <meta property="og:url" content="{{ url_for('auth.home', _external=True) }}">
+    <meta property="og:image" content="{{ url_for('static', filename='img/og-image.png', _external=True) }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="The GAJ dashboard: a weekly applications chart and a board with Applied, Interview and Offer columns.">
+    <meta name="twitter:card" content="summary_large_image">
     <link rel="preload" href="{{ url_for('static', filename='fonts/bricolage-grotesque.woff2') }}"
           as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -56,7 +72,8 @@
         {{ nav_item("messages.conversations", "Messages", "messages", ep.startswith("messages."), unread_messages) }}
         {{ nav_item("notifications.notifications", "Notifications", "notifications", ep.startswith("notifications."), unread_notifications) }}
         {% else %}
-        {{ nav_item("applications.dashboard", "Dashboard", "dashboard", ep.startswith("applications.")) }}
+        {{ nav_item("applications.dashboard", "Dashboard", "dashboard", ep.startswith("applications.") and ep != "applications.board") }}
+        {{ nav_item("applications.board", "Board", "board", ep == "applications.board") }}
         {{ nav_item("jobs.jobs", "Jobs", "jobs", ep in ("jobs.jobs", "jobs.job_details")) }}
         {{ nav_item("profile.profile", "Profile", "profile", ep.startswith("profile.")) }}
         {{ nav_item("messages.conversations", "Messages", "messages", ep.startswith("messages."), unread_messages) }}
@@ -80,6 +97,10 @@
         </div>
         {% endif %}
 
+        <button class="nav-item theme-toggle" type="button" data-theme-toggle>
+            <span class="theme-when-dark">{{ icon("sun") }}<span>Light mode</span></span>
+            <span class="theme-when-light">{{ icon("moon") }}<span>Dark mode</span></span>
+        </button>
         {{ nav_item("account.settings", "Account", "account", ep.startswith("account.")) }}
         <form method="POST" action="{{ url_for('auth.logout') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -105,6 +126,10 @@
 <header class="public-bar">
     <a class="wordmark wordmark-small" href="{{ url_for('auth.home') }}">GAJ</a>
     <nav>
+        <button class="theme-icon" type="button" data-theme-toggle>
+            <span class="theme-when-dark">{{ icon("sun") }}<span class="sr-only">Switch to light mode</span></span>
+            <span class="theme-when-light">{{ icon("moon") }}<span class="sr-only">Switch to dark mode</span></span>
+        </button>
         <a href="{{ url_for('auth.login') }}">Log in</a>
         <a class="btn btn-small" href="{{ url_for('auth.register') }}">Create account</a>
     </nav>

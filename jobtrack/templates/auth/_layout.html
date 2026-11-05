@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 
 {# Split screen for log in, sign up and password pages: GAJ on the left, the form on the right. #}
 
@@ -11,6 +12,7 @@
 <section class="auth-brand" aria-label="GAJ">
     <a class="auth-wordmark" href="{{ url_for('auth.home') }}">GAJ</a>
     <p class="auth-tagline">get a job.</p>
+    <div class="auth-preview">{% include "_preview.html" %}</div>
     <figure class="auth-daily">
         <blockquote>{{ daily_line }}</blockquote>
         <figcaption>Today's line</figcaption>
@@ -18,6 +20,10 @@
 </section>
 
 <section class="auth-panel">
+    <button class="theme-icon auth-theme" type="button" data-theme-toggle>
+        <span class="theme-when-dark">{{ icon("sun") }}<span class="sr-only">Switch to light mode</span></span>
+        <span class="theme-when-light">{{ icon("moon") }}<span class="sr-only">Switch to dark mode</span></span>
+    </button>
     <div class="auth-form">
         <h1>{% block auth_heading %}{% endblock %}</h1>
         <p class="auth-lead">{% block auth_lead %}{% endblock %}</p>

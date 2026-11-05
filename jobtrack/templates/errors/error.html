@@ -4,10 +4,17 @@
 
 {% block content %}
 
-<div class="empty-state">
+<div class="error-page">
+    {% if code %}<p class="error-code" aria-hidden="true">{{ code }}</p>{% endif %}
     <h1>{{ title }}</h1>
     <p>{{ message }}</p>
-    <a class="btn" href="{{ url_for('auth.home') }}">Go to GAJ home</a>
+    <div class="error-actions">
+        {% if g.user %}
+        <a class="btn" href="{{ url_for('applications.dashboard') }}">Go to your dashboard</a>
+        {% else %}
+        <a class="btn" href="{{ url_for('auth.home') }}">Go to GAJ home</a>
+        {% endif %}
+    </div>
 </div>
 
 {% endblock %}
