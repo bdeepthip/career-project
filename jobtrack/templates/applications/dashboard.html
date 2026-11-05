@@ -28,7 +28,7 @@
     <ol class="setup-steps-list">
         {% for step in setup %}
         <li class="setup-step{{ ' is-done' if step.done }}">
-            <span class="setup-mark" aria-hidden="true">{{ "✓" if step.done else loop.index }}</span>
+            <span class="setup-mark" aria-hidden="true">{% if step.done %}{{ icon("check") }}{% else %}{{ loop.index }}{% endif %}</span>
             <div>
                 <h3>{{ step.title }}{% if step.done %}<span class="sr-only"> (done)</span>{% endif %}</h3>
                 <p>{{ step.text }}</p>
