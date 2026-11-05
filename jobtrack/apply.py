@@ -16,9 +16,11 @@ from .auth import login_required
 from .extensions import limiter, user_key
 from .mailer import send_email
 from .models import (
-    Education, Experience, Job, JobApplication, Profile, Report, Resume, Skill, Submission, db
+    Education, Experience, Job, JobApplication, Profile, Report, Resume, ResumeVersion, Skill,
+    Submission, db
 )
 from .notifications import notify, utc_now
+from . import resume_content as rc
 from .resumes import pdf_download, read_pdf_upload
 from .validation import clean
 
@@ -73,28 +75,47 @@ def easy_apply(job_id):
 
     saved_resume = Resume.query.filter_by(user_id=g.user.id).first()
     snapshot = profile_snapshot(g.user)
+    # Resumes built in Roleflow, the one tailored for this job first
+    versions = (ResumeVersion.query.filter_by(user_id=g.user.id)
+                .order_by(ResumeVersion.updated_at.desc()).all())
+    versions.sort(key=lambda v: v.job_id != job.id)   # stable: keeps newest first otherwise
+    job_text = f"{job.title}\n{job.description or ''}\n{job.required_skills or ''}"
+    scores = {v.id: rc.score(rc.load(v.content_json), job_text, job.required_skills or "")["score"]
+              for v in versions}
+
+    def form_again(note, choice=None):
+        return render_template("apply/easy_apply.html", job=job, snapshot=snapshot,
+                               resume=saved_resume, versions=versions, scores=scores,
+                               note=note, choice=choice), 400
 
     if request.method == "POST":
         note = clean(request.form, "note", 2000)
+        choice = request.form.get("resume_source") or ""
         upload = request.files.get("resume")
-        if upload is not None and upload.filename:
+        has_upload = upload is not None and upload.filename
+
+        if has_upload and choice in ("upload", ""):
             filename, data, error = read_pdf_upload(upload)
             if error:
                 flash(error, "error")
-                return render_template("apply/easy_apply.html", job=job, snapshot=snapshot,
-                                       resume=saved_resume, note=note), 400
+                return form_again(note, "upload")
             if request.form.get("save_resume"):
                 if saved_resume is None:
                     saved_resume = Resume(user_id=g.user.id)
                     db.session.add(saved_resume)
                 saved_resume.filename, saved_resume.data, saved_resume.size = filename, data, len(data)
                 saved_resume.uploaded_at = utc_now()
-        elif saved_resume is not None:
+        elif choice.startswith("built-"):
+            version = next((v for v in versions if f"built-{v.id}" == choice), None)
+            if version is None:
+                abort(404)
+            content = rc.load(version.content_json)
+            filename, data = rc.pdf_filename(content), rc.to_pdf(content)
+        elif choice in ("pdf", "") and saved_resume is not None:
             filename, data = saved_resume.filename, saved_resume.data
         else:
-            flash("Attach your resume as a PDF to apply.", "error")
-            return render_template("apply/easy_apply.html", job=job, snapshot=snapshot,
-                                   resume=None, note=note), 400
+            flash("Choose a resume to send, or attach one as a PDF.", "error")
+            return form_again(note, choice or "upload")
 
         tracked = JobApplication(
             user_id=g.user.id, company=job.company, job_title=job.title, location=job.location,
@@ -118,7 +139,8 @@ def easy_apply(job_id):
               "notification when they update your status.", "success")
         return details
 
-    return render_template("apply/easy_apply.html", job=job, snapshot=snapshot, resume=saved_resume)
+    return render_template("apply/easy_apply.html", job=job, snapshot=snapshot, resume=saved_resume,
+                           versions=versions, scores=scores)
 
 
 @bp.route("/jobs/<int:job_id>/withdraw", methods=["POST"])

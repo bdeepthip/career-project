@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}Resumes{% endblock %}
+
+{% block content %}
+
+<header class="dash-head">
+    <div>
+        <h1>Resumes</h1>
+        <p class="lede">Build a resume from your profile, then make a copy for each job and see how well it matches.</p>
+    </div>
+    <form method="POST" action="{{ url_for('builder.new_resume') }}" class="dash-actions">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn" type="submit">{{ icon("plus") }}New resume from my profile</button>
+    </form>
+</header>
+
+{% if versions %}
+<ul class="resume-list">
+    {% for version in versions %}
+    {% set result = scores[version.id] %}
+    <li class="resume-row">
+        <a class="resume-main" href="{{ url_for('builder.edit_resume', version_id=version.id) }}">
+            <span class="resume-icon-doc" aria-hidden="true">{{ icon("resume") }}</span>
+            <span class="resume-text">
+                <strong>{{ version.name }}</strong>
+                <small>
+                    {% if version.job %}For {{ version.job.title }} at {{ version.job.company }}
+                    {% elif version.target_text %}For a job description you pasted
+                    {% else %}Not matched to a job yet{% endif %}
+                    · edited {{ version.updated_at | time_ago_utc }}
+                </small>
+            </span>
+        </a>
+        {% if result.score is not none %}
+        <span class="score-pill score-{{ 'high' if result.score >= 75 else ('mid' if result.score >= 50 else 'low') }}"
+              title="Keyword match">{{ result.score }}%<span class="sr-only"> keyword match</span></span>
+        {% endif %}
+        <div class="resume-actions">
+            <a class="btn btn-small btn-secondary" href="{{ url_for('builder.resume_pdf', version_id=version.id) }}">{{ icon("download") }}PDF</a>
+            <form method="POST" action="{{ url_for('builder.copy_resume', version_id=version.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-small btn-quiet" type="submit">Copy</button>
+            </form>
+            <form method="POST" action="{{ url_for('builder.delete_resume', version_id=version.id) }}"
+                  data-confirm="Delete {{ version.name }}? This cannot be undone.">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-small btn-danger-quiet" type="submit">Delete</button>
+            </form>
+        </div>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<div class="empty-state">
+    <h2>No resumes yet</h2>
+    <p>Roleflow fills in your first resume from your profile: experience, education and skills. You edit it from there.</p>
+    <form method="POST" action="{{ url_for('builder.new_resume') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn" type="submit">Build my first resume</button>
+    </form>
+</div>
+{% endif %}
+
+<p class="footnote">To tailor a resume for a job on Roleflow, open the job and choose <strong>Tailor a resume for this job</strong>.
+For a job somewhere else, open a resume and paste the job description next to it.</p>
+
+{% endblock %}

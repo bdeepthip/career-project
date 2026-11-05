@@ -15,7 +15,7 @@ from .auth import login_required, start_session
 from .inbox import forwarding_address
 from .models import (
     Block, Education, Experience, Job, JobApplication, JobEmail, Message, Notification, Profile,
-    Report, Resume, Skill, Submission, User, UserActivity, db
+    Report, Resume, ResumeVersion, Skill, Submission, User, UserActivity, db
 )
 from .validation import MIN_PASSWORD_LENGTH, clean
 
@@ -117,6 +117,11 @@ def export_data():
                                Notification.created_at),
         "resume": (lambda r: {"filename": r.filename, "uploaded_at_utc": r.uploaded_at} if r else None)(
             Resume.query.filter_by(user_id=g.user.id).first()),
+        "built_resumes": [
+            {"name": v.name, "job_id": v.job_id, "target_text": v.target_text,
+             "content": json.loads(v.content_json), "updated_at_utc": v.updated_at}
+            for v in ResumeVersion.query.filter_by(user_id=g.user.id).order_by(ResumeVersion.id)
+        ],
         "easy_apply_applications": [
             {"job": s.job.title, "company": s.job.company, "status": s.status,
              "note": s.note, "applied_at_utc": s.created_at, "resume_sent": s.resume_filename}
@@ -157,8 +162,12 @@ def delete_account():
         Submission.query.filter(Submission.job_id.in_(own_job_ids)).delete()
         for job_id in own_job_ids:
             Notification.query.filter_by(link=url_for("jobs.job_details", job_id=job_id)).delete()
+        # Resumes other people tailored for these jobs stay; they just lose the link
+        ResumeVersion.query.filter(ResumeVersion.job_id.in_(own_job_ids)).update(
+            {ResumeVersion.job_id: None}, synchronize_session=False)
         Job.query.filter(Job.id.in_(own_job_ids)).delete()
     Resume.query.filter_by(user_id=uid).delete()
+    ResumeVersion.query.filter_by(user_id=uid).delete()
 
     for model in USER_MODELS:
         model.query.filter_by(user_id=uid).delete()

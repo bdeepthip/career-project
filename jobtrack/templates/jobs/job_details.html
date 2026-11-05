@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 
 {% block title %}{{ job["title"] }}{% endblock %}
 
@@ -32,6 +33,29 @@
     </div>
 
     {% include "jobs/_match_box.html" %}
+
+    {% if not g.user.is_employer %}
+    <div class="tailor-box">
+        <div>
+            <h3>{{ icon("resume") }}Resume for this job</h3>
+            {% if tailored %}
+            <p>Your resume <strong>{{ tailored.name }}</strong> has
+               {% if tailored_score is not none %}<strong>{{ tailored_score }}%</strong> of this job's keywords{% else %}been started{% endif %}.</p>
+            {% else %}
+            <p>Make a copy of your resume for this job and see which of its keywords you're missing.</p>
+            {% endif %}
+        </div>
+        {% if tailored %}
+        <a class="btn btn-secondary" href="{{ url_for('builder.edit_resume', version_id=tailored.id) }}">Open resume</a>
+        {% else %}
+        <form method="POST" action="{{ url_for('builder.new_resume') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="job_id" value="{{ job.id }}">
+            <button class="btn btn-secondary" type="submit">Tailor a resume for this job</button>
+        </form>
+        {% endif %}
+    </div>
+    {% endif %}
 
     {% if job.easy_apply %}
         <div class="apply-box">
