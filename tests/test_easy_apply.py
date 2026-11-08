@@ -165,7 +165,7 @@ def test_apply_needs_a_resume(app, people):
     post_job(people)
     login(people, SEEKER)
     response = apply(people, job_id(app), resume=False)
-    assert response.status_code == 400 and b"Attach your resume" in response.data
+    assert response.status_code == 400 and b"attach one as a PDF" in response.data
 
 
 def test_saved_resume_is_used(app, people):

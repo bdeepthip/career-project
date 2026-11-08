@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 
 {% block title %}Easy Apply: {{ job.title }}{% endblock %}
 
@@ -14,23 +15,40 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
             <h2>Resume</h2>
-            {% if resume %}
-                <div class="resume-file">
+            {% set default = choice or ("built-" ~ versions[0].id if versions and versions[0].job_id == job.id
+                                        else ("pdf" if resume else ("built-" ~ versions[0].id if versions else "upload"))) %}
+            <fieldset class="resume-choices">
+                <legend class="sr-only">Which resume to send</legend>
+                {% for v in versions %}
+                <label class="resume-choice">
+                    <input type="radio" name="resume_source" value="built-{{ v.id }}" {{ "checked" if default == "built-" ~ v.id }}>
                     <span class="resume-icon" aria-hidden="true">PDF</span>
-                    <div>
-                        <strong>{{ resume.filename }}</strong>
-                        <p class="muted small">Your saved resume. It's sent unless you choose another file below.</p>
-                    </div>
-                </div>
-                <label for="resume">Use a different PDF for this job (optional)</label>
-            {% else %}
-                <label for="resume">Your resume (PDF, up to 5 MB)</label>
-            {% endif %}
-            <input type="file" id="resume" name="resume" accept="application/pdf,.pdf" {{ "required" if not resume }}>
+                    <span>
+                        <strong>{{ v.name }}</strong>
+                        <small>Built in Roleflow{% if scores[v.id] is not none %}: {{ scores[v.id] }}% of this job's keywords{% endif %}</small>
+                    </span>
+                </label>
+                {% endfor %}
+                {% if resume %}
+                <label class="resume-choice">
+                    <input type="radio" name="resume_source" value="pdf" {{ "checked" if default == "pdf" }}>
+                    <span class="resume-icon" aria-hidden="true">PDF</span>
+                    <span><strong>{{ resume.filename }}</strong><small>Your uploaded resume</small></span>
+                </label>
+                {% endif %}
+                <label class="resume-choice">
+                    <input type="radio" name="resume_source" value="upload" {{ "checked" if default == "upload" }}>
+                    <span class="resume-icon" aria-hidden="true">{{ icon("plus") }}</span>
+                    <span><strong>Upload a PDF</strong><small>Choose a file below (up to 5 MB)</small></span>
+                </label>
+            </fieldset>
+            <label for="resume" class="sr-only">PDF to upload</label>
+            <input type="file" id="resume" name="resume" accept="application/pdf,.pdf">
             <label class="checkbox">
                 <input type="checkbox" name="save_resume" value="1" {{ "checked" if not resume }}>
-                Save this file to my profile for next time
+                Save an uploaded file to my profile for next time
             </label>
+            <p class="field-hint">No resume yet? <a href="{{ url_for('builder.resumes') }}">Build one in Roleflow</a> from your profile.</p>
 
             <h2 class="form-section">A note to the employer <span class="muted small">(optional)</span></h2>
             <label class="sr-only" for="note">Note</label>

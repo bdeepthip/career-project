@@ -12,7 +12,7 @@ from sqlalchemy import func, or_
 
 from . import insights
 from .auth import login_required
-from .models import JobApplication, JobEmail, Resume, Skill, db
+from .models import JobApplication, JobEmail, Resume, ResumeVersion, Skill, db
 from .validation import STATUSES, validate_application
 
 bp = Blueprint("applications", __name__)
@@ -49,9 +49,9 @@ def setup_steps(user_id, total):
         {"title": "Add your skills", "done": has(Skill),
          "text": "Roleflow uses them to show how well you match each job.",
          "url": url_for("profile.profile"), "action": "Open profile"},
-        {"title": "Upload your resume", "done": has(Resume),
-         "text": "Saved once, then sent with every Easy Apply.",
-         "url": url_for("profile.profile"), "action": "Open profile"},
+        {"title": "Build your resume", "done": has(ResumeVersion) or has(Resume),
+         "text": "Roleflow fills it in from your profile. Or upload a PDF you already have.",
+         "url": url_for("builder.resumes"), "action": "Build resume"},
         {"title": "Forward one job email", "done": has(JobEmail),
          "text": "Use your Roleflow address and the matching status updates itself.",
          "url": url_for("inbox.inbox"), "action": "Open inbox"},
